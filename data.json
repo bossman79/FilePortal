@@ -1,0 +1,114 @@
+{
+    "projects": [
+        {
+            "id": "c50ca369-6ed7-4655-846d-b5485e457e9d",
+            "name": "Project A",
+            "work_area_path": "\\\\Betws707\\c$\\Users\\vgiordano\\AppData\\Roaming\\Synergis\\Adept\\My Adept WorkArea\\Project A",
+            "created_at": "2026-06-08T10:37:59.904418"
+        },
+        {
+            "id": "6013717d-8e1e-41e2-85f1-0d0bff5f3d0d",
+            "name": "Test Project",
+            "work_area_path": "\\\\Betws707\\c$\\Users\\vgiordano\\AppData\\Roaming\\Synergis\\Adept\\My Adept WorkArea\\Project A",
+            "flatten_uploads": true,
+            "created_at": "2026-06-08T11:28:20.382275"
+        }
+    ],
+    "links": [
+        {
+            "uuid": "66195424-c1e0-424a-a447-8b8e72619099",
+            "project_id": "c50ca369-6ed7-4655-846d-b5485e457e9d",
+            "created_by": "VGiordano",
+            "created_at": "2026-06-08T10:38:03.582754",
+            "project_name": "Project A",
+            "full_url": "http://:5000/s/66195424-c1e0-424a-a447-8b8e72619099"
+        },
+        {
+            "uuid": "50a19eb1-c99d-4ccf-912e-8bf3c2e9fe84",
+            "project_id": "6013717d-8e1e-41e2-85f1-0d0bff5f3d0d",
+            "created_by": "VGiordano",
+            "created_at": "2026-06-08T11:28:24.178185",
+            "project_name": "Test Project",
+            "full_url": "http://:5000/s/50a19eb1-c99d-4ccf-912e-8bf3c2e9fe84"
+        }
+    ],
+    "files": [
+        {
+            "project_id": "c50ca369-6ed7-4655-846d-b5485e457e9d",
+            "filename": "expense_request.html",
+            "relative_path": "expenses",
+            "md5": "c5a9f4e441e683d859f87c62052ceae3",
+            "uploaded_at": "2026-06-08T11:11:20.892832"
+        },
+        {
+            "project_id": "c50ca369-6ed7-4655-846d-b5485e457e9d",
+            "filename": "List_of_needs.txt",
+            "relative_path": "expenses/other",
+            "md5": "d5def2587b1ed7747c2357e07350cd4e",
+            "uploaded_at": "2026-06-08T11:11:20.900439"
+        },
+        {
+            "project_id": "c50ca369-6ed7-4655-846d-b5485e457e9d",
+            "filename": "Equipment__Subscription_Request.pdf",
+            "relative_path": "expenses",
+            "md5": "a52970cd04df09153436e45b7aafb7e8",
+            "uploaded_at": "2026-06-08T11:11:20.900503"
+        },
+        {
+            "project_id": "c50ca369-6ed7-4655-846d-b5485e457e9d",
+            "filename": "TITLES.txt",
+            "relative_path": "expenses/other",
+            "md5": "d380dfd020c39829ee9a64ceb2b80699",
+            "uploaded_at": "2026-06-08T11:11:20.902072"
+        },
+        {
+            "project_id": "c50ca369-6ed7-4655-846d-b5485e457e9d",
+            "filename": "Well360_Virtual_Health_-_Telemedicine.pdf",
+            "relative_path": "expenses/other",
+            "md5": "50113f795d5440ee52da6c5c61c59be6",
+            "uploaded_at": "2026-06-08T11:11:20.913499"
+        },
+        {
+            "project_id": "6013717d-8e1e-41e2-85f1-0d0bff5f3d0d",
+            "filename": "expense_request.html",
+            "relative_path": "",
+            "md5": "c5a9f4e441e683d859f87c62052ceae3",
+            "uploaded_at": "2026-06-08T11:38:06.134441"
+        },
+        {
+            "project_id": "6013717d-8e1e-41e2-85f1-0d0bff5f3d0d",
+            "filename": "Equipment__Subscription_Request.pdf",
+            "relative_path": "",
+            "md5": "a52970cd04df09153436e45b7aafb7e8",
+            "uploaded_at": "2026-06-08T11:38:06.134507"
+        },
+        {
+            "project_id": "6013717d-8e1e-41e2-85f1-0d0bff5f3d0d",
+            "filename": "List_of_needs.txt",
+            "relative_path": "",
+            "md5": "38e54ddee979e562a9c14cc3f88047c3",
+            "uploaded_at": "2026-06-08T11:43:37.935528"
+        },
+        {
+            "project_id": "6013717d-8e1e-41e2-85f1-0d0bff5f3d0d",
+            "filename": "TITLES.txt",
+            "relative_path": "",
+            "md5": "d380dfd020c39829ee9a64ceb2b80699",
+            "uploaded_at": "2026-06-08T11:38:06.137200"
+        },
+        {
+            "project_id": "6013717d-8e1e-41e2-85f1-0d0bff5f3d0d",
+            "filename": "Well360_Virtual_Health_-_Telemedicine.pdf",
+            "relative_path": "",
+            "md5": "50113f795d5440ee52da6c5c61c59be6",
+            "uploaded_at": "2026-06-08T11:38:06.144125"
+        }
+    ],
+    "settings": {
+        "public_base_url": "http://10.64.105.190:5000",
+        "sp_tenant_id": "",
+        "sp_client_id": "",
+        "sp_client_secret": "",
+        "upload_page_enabled": "true"
+    }
+}

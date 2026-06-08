@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ project.name }} - Secure Document Upload</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0047AB;
+            --primary-hover: #003380;
+            --bg-color: #f8fafc;
+            --surface: #ffffff;
+            --surface-hover: #f1f5f9;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --danger: #ef4444;
+            --danger-bg: #fef2f2;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            min-height: 100vh;
+            padding: 2rem;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: center;
+        }
+
+        .upload-container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2.5rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+        }
+
+        h1 {
+            font-weight: 600;
+            font-size: 1.75rem;
+            margin: 0 0 0.25rem 0;
+            letter-spacing: -0.5px;
+            color: var(--text-main);
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            font-size: 1rem;
+        }
+
+        /* Explorer Header */
+        .explorer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--surface-hover);
+            padding: 0.75rem 1rem;
+            border-radius: 8px 8px 0 0;
+            border: 1px solid var(--border);
+            border-bottom: none;
+        }
+
+        .breadcrumbs {
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .crumb {
+            color: var(--primary);
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .crumb:hover {
+            color: var(--primary-hover);
+            text-decoration: underline;
+        }
+
+        .crumb.active {
+            color: var(--text-main);
+            cursor: default;
+            text-decoration: none;
+        }
+
+        .crumb-separator {
+            color: var(--text-muted);
+        }
+
+        button.btn-sm {
+            background: #fff;
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.4rem 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button.btn-sm:hover {
+            background: var(--surface-hover);
+            border-color: #cbd5e1;
+        }
+
+        /* Explorer Body */
+        .explorer-body {
+            border: 1px solid var(--border);
+            border-radius: 0 0 8px 8px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .explorer-list-header {
+            display: grid;
+            grid-template-columns: 2fr 1fr auto;
+            background: #fff;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        #explorer-content {
+            background: #fff;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .explorer-item {
+            display: grid;
+            grid-template-columns: 2fr 1fr auto;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.875rem;
+            transition: background 0.2s;
+        }
+
+        .explorer-item:last-child {
+            border-bottom: none;
+        }
+
+        .explorer-item:hover {
+            background: var(--surface-hover);
+        }
+
+        .explorer-item.folder {
+            cursor: pointer;
+        }
+
+        .col-name {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        .col-date {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        .delete-btn {
+            background: transparent;
+            color: var(--danger);
+            border: none;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .delete-btn:hover {
+            background: var(--danger-bg);
+        }
+
+        /* Dropzone */
+        .dropzone {
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 3rem 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+            cursor: pointer;
+            margin-bottom: 2rem;
+        }
+
+        .dropzone.dragover {
+            border-color: var(--primary);
+            background: #eff6ff;
+            transform: scale(1.01);
+        }
+
+        .dropzone-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .dropzone-text {
+            font-size: 1rem;
+            font-weight: 500;
+            margin: 0 0 0.25rem 0;
+            color: var(--text-main);
+        }
+
+        .dropzone-hint {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            margin: 0;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        /* Upload Progress */
+        .upload-list {
+            text-align: left;
+        }
+
+        .upload-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #fff;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        }
+
+        .status {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-weight: 500;
+        }
+
+        .status.uploading {
+            background: #eff6ff;
+            color: var(--primary);
+            animation: pulse 2s infinite;
+        }
+
+        .status.success {
+            background: #ecfdf5;
+            color: #10b981;
+        }
+
+        .status.error {
+            background: var(--danger-bg);
+            color: var(--danger);
+        }
+        
+        .progress-bar-container {
+            width: 100%;
+            height: 4px;
+            background: #e2e8f0;
+            border-radius: 2px;
+            margin-top: 0.5rem;
+            overflow: hidden;
+            display: none;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.2s ease;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    {% if not upload_enabled %}
+    <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.95); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 2rem;">
+        <h1 style="color: var(--primary); margin-bottom: 1rem;">Portal Transitioned</h1>
+        <p style="color: var(--text-muted); max-width: 500px; font-size: 1.1rem; line-height: 1.5;">This upload portal has been retired. Please use the secure SharePoint "Request Files" link provided by your administrator to upload documents.</p>
+    </div>
+    {% endif %}
+    <div class="upload-container">
+        <h1>{{ project.name }}</h1>
+        <p class="subtitle">Secure Document Gateway</p>
+
+        <!-- Explorer Header -->
+        <div class="explorer-header">
+            <div class="breadcrumbs" id="breadcrumbs">
+                <span class="crumb" onclick="loadDirectory('')">Home</span>
+            </div>
+            {% if not project.flatten_uploads %}
+            <button class="btn-sm" onclick="createFolder()">+ New Folder</button>
+            {% endif %}
+        </div>
+
+        <!-- Explorer Body -->
+        <div class="explorer-body">
+            <div class="explorer-list-header">
+                <div class="col-name">Name</div>
+                <div class="col-date">Uploaded</div>
+                <div class="col-actions"></div>
+            </div>
+            <div id="explorer-content">
+                <!-- Dynamically populated -->
+            </div>
+        </div>
+
+        <!-- Dropzone -->
+        <div class="dropzone" id="dropzone">
+            <span class="dropzone-icon">📁</span>
+            <p class="dropzone-text">Drag & drop files or folders here</p>
+            <p class="dropzone-hint">Uploads to the current folder</p>
+            <!-- allow directory selection via input if user clicks -->
+            <input type="file" id="fileInput" multiple webkitdirectory directory>
+        </div>
+
+        <div class="upload-list" id="uploadList"></div>
+    </div>
+
+    <script>
+        const flattenUploads = {{ 'true' if project.flatten_uploads else 'false' }};
+        let currentPath = '';
+
+        // Explorer Logic
+        async function loadDirectory(path) {
+            currentPath = path;
+            updateBreadcrumbs(path);
+            
+            try {
+                const res = await fetch(`/s/{{ link_uuid }}/api/explore?path=${encodeURIComponent(path)}`);
+                const data = await res.json();
+                renderExplorer(data.folders, data.files);
+            } catch(e) {
+                console.error('Failed to load directory', e);
+            }
+        }
+
+        function updateBreadcrumbs(path) {
+            const bc = document.getElementById('breadcrumbs');
+            bc.innerHTML = `<span class="crumb" onclick="loadDirectory('')">Home</span>`;
+            
+            if (path) {
+                const parts = path.split('/').filter(p => p);
+                let current = '';
+                parts.forEach((p, index) => {
+                    current += (current ? '/' : '') + p;
+                    const isLast = index === parts.length - 1;
+                    bc.innerHTML += `<span class="crumb-separator">/</span>`;
+                    if (isLast) {
+                        bc.innerHTML += `<span class="crumb active">${p}</span>`;
+                    } else {
+                        const navPath = current;
+                        bc.innerHTML += `<span class="crumb" onclick="loadDirectory('${navPath}')">${p}</span>`;
+                    }
+                });
+            }
+        }
+
+        function renderExplorer(folders, files) {
+            const container = document.getElementById('explorer-content');
+            container.innerHTML = '';
+            
+            if (currentPath !== '') {
+                const upPath = currentPath.split('/').slice(0, -1).join('/');
+                container.innerHTML += `
+                    <div class="explorer-item folder" onclick="loadDirectory('${upPath}')">
+                        <div class="col-name" style="color: var(--primary);">📁 ..</div>
+                        <div class="col-date"></div>
+                        <div class="col-actions"></div>
+                    </div>
+                `;
+            }
+            
+            folders.forEach(f => {
+                container.innerHTML += `
+                    <div class="explorer-item folder" onclick="loadDirectory('${f.path}')">
+                        <div class="col-name">📁 ${f.name}</div>
+                        <div class="col-date">--</div>
+                        <div class="col-actions"></div>
+                    </div>
+                `;
+            });
+            
+            files.forEach(f => {
+                const dateStr = f.uploaded_at ? f.uploaded_at.substring(0, 19).replace('T', ' ') : '--';
+                container.innerHTML += `
+                    <div class="explorer-item file">
+                        <div class="col-name">📄 ${f.name}</div>
+                        <div class="col-date">${dateStr}</div>
+                        <div class="col-actions">
+                            <button class="delete-btn" onclick="deleteFile(event, '${f.name}', '${currentPath}')">Delete</button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            if (folders.length === 0 && files.length === 0 && currentPath === '') {
+                container.innerHTML = `<div style="padding: 2rem; text-align: center; color: var(--text-muted);">Folder is empty</div>`;
+            }
+        }
+
+        async function createFolder() {
+            const name = prompt('Enter folder name:');
+            if (!name) return;
+            
+            try {
+                const res = await fetch(`/s/{{ link_uuid }}/api/folder`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path: currentPath, name })
+                });
+                if (res.ok) {
+                    loadDirectory(currentPath);
+                } else {
+                    alert('Failed to create folder');
+                }
+            } catch(e) {
+                alert('Network error');
+            }
+        }
+
+        async function deleteFile(e, filename, path) {
+            e.stopPropagation();
+            if (!confirm(`Are you sure you want to delete ${filename}?`)) return;
+            
+            try {
+                const res = await fetch(`/s/{{ link_uuid }}/file/${encodeURIComponent(filename)}?path=${encodeURIComponent(path)}`, {
+                    method: 'DELETE'
+                });
+                if (res.ok) {
+                    loadDirectory(currentPath);
+                } else {
+                    alert('Failed to delete file');
+                }
+            } catch(e) {
+                console.error(e);
+                alert('Network error while deleting');
+            }
+        }
+
+        // Upload Logic
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('fileInput');
+        const uploadList = document.getElementById('uploadList');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropzone.addEventListener(eventName, () => dropzone.classList.add('dragover'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, () => dropzone.classList.remove('dragover'), false);
+        });
+
+        dropzone.addEventListener('drop', handleDrop, false);
+        dropzone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', function() { handleFiles(this.files) });
+
+        function handleDrop(e) {
+            const items = e.dataTransfer.items;
+            if (items) {
+                for (let i=0; i<items.length; i++) {
+                    const item = items[i].webkitGetAsEntry();
+                    if (item) traverseFileTree(item, currentPath);
+                }
+            } else {
+                handleFiles(e.dataTransfer.files);
+            }
+        }
+
+        function traverseFileTree(item, uploadPath) {
+            if (item.isFile) {
+                item.file(file => uploadFile(file, uploadPath));
+            } else if (item.isDirectory) {
+                const newPath = uploadPath ? `${uploadPath}/${item.name}` : item.name;
+                const dirReader = item.createReader();
+                dirReader.readEntries(entries => {
+                    for (let i=0; i<entries.length; i++) {
+                        traverseFileTree(entries[i], newPath);
+                    }
+                });
+            }
+        }
+
+        function handleFiles(files) {
+            ([...files]).forEach(f => uploadFile(f, currentPath));
+        }
+
+        function uploadFile(file, targetPath) {
+            if (flattenUploads) {
+                targetPath = '';
+            }
+            const id = 'upload-' + Math.random().toString(36).substr(2, 9);
+            const itemHtml = `
+                <div class="upload-item" id="${id}">
+                    <div style="width: 100%;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                            <span style="font-weight: 500; font-size: 0.875rem;">${targetPath ? targetPath + '/' : ''}${file.name}</span>
+                            <span class="status uploading" id="status-${id}">Uploading...</span>
+                        </div>
+                        <div class="progress-bar-container" id="prog-cont-${id}" style="display: block;">
+                            <div class="progress-bar" id="prog-${id}"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            uploadList.insertAdjacentHTML('afterbegin', itemHtml);
+
+            const xhr = new XMLHttpRequest();
+            const formData = new FormData();
+            
+            xhr.open('POST', `/s/{{ link_uuid }}/upload`, true);
+
+            xhr.upload.addEventListener("progress", function(e) {
+                if (e.lengthComputable) {
+                    const percentComplete = (e.loaded / e.total) * 100;
+                    document.getElementById(`prog-${id}`).style.width = percentComplete + '%';
+                }
+            });
+
+            xhr.onload = function() {
+                const statusEl = document.getElementById(`status-${id}`);
+                const progContEl = document.getElementById(`prog-cont-${id}`);
+                
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    const response = JSON.parse(xhr.responseText);
+                    if (response.status === 'skipped') {
+                        statusEl.className = 'status';
+                        statusEl.style.background = '#f1f5f9';
+                        statusEl.style.color = '#64748b';
+                        statusEl.innerText = 'Skipped (Unchanged)';
+                    } else {
+                        statusEl.className = 'status success';
+                        statusEl.innerText = 'Uploaded';
+                    }
+                    setTimeout(() => { progContEl.style.display = 'none'; }, 500);
+                    
+                    // Refresh explorer if we uploaded to current viewed directory
+                    if (targetPath === currentPath || targetPath.startsWith(currentPath)) {
+                        loadDirectory(currentPath);
+                    }
+                } else {
+                    statusEl.className = 'status error';
+                    statusEl.innerText = 'Failed';
+                }
+            };
+
+            xhr.onerror = function() {
+                const statusEl = document.getElementById(`status-${id}`);
+                statusEl.className = 'status error';
+                statusEl.innerText = 'Network Error';
+            };
+
+            formData.append('file', file);
+            formData.append('path', targetPath);
+            xhr.send(formData);
+        }
+
+        // Initialize explorer on page load
+        document.addEventListener('DOMContentLoaded', () => loadDirectory(''));
+    </script>
+</body>
+</html>
