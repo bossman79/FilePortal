@@ -4,7 +4,16 @@
             "id": "c50ca369-6ed7-4655-846d-b5485e457e9d",
             "name": "Project A",
             "work_area_path": "\\\\Betws707\\c$\\Users\\vgiordano\\AppData\\Roaming\\Synergis\\Adept\\My Adept WorkArea\\Project A",
-            "created_at": "2026-06-08T10:37:59.904418"
+            "created_at": "2026-06-08T10:37:59.904418",
+            "flatten_uploads": true,
+            "adept_work_area_id": "",
+            "adept_library_id": "",
+            "auto_checkin": false,
+            "name_filter_pattern": "",
+            "file_type_filter": "",
+            "sp_site_id": "",
+            "sp_drive_id": "",
+            "sp_folder_id": ""
         },
         {
             "id": "6013717d-8e1e-41e2-85f1-0d0bff5f3d0d",
@@ -21,7 +30,7 @@
             "created_by": "VGiordano",
             "created_at": "2026-06-08T10:38:03.582754",
             "project_name": "Project A",
-            "full_url": "http://:5000/s/66195424-c1e0-424a-a447-8b8e72619099"
+            "full_url": "http://10.64.105.190:5000/s/66195424-c1e0-424a-a447-8b8e72619099"
         },
         {
             "uuid": "50a19eb1-c99d-4ccf-912e-8bf3c2e9fe84",
@@ -29,7 +38,7 @@
             "created_by": "VGiordano",
             "created_at": "2026-06-08T11:28:24.178185",
             "project_name": "Test Project",
-            "full_url": "http://:5000/s/50a19eb1-c99d-4ccf-912e-8bf3c2e9fe84"
+            "full_url": "http://10.64.105.190:5000/s/50a19eb1-c99d-4ccf-912e-8bf3c2e9fe84"
         }
     ],
     "files": [

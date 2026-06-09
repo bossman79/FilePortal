@@ -80,23 +80,35 @@ def index():
 
 @app.route('/admin/login', methods=['GET', 'POST'])
 def login():
+    global adept
+    
     if request.method == 'POST':
         domain = request.form.get('domain')
         username = request.form.get('username')
         password = request.form.get('password')
         
         if adept:
-            if adept.authenticate(domain, username, password):
+            print(f"[LOGIN] Attempting authentication for {username} on domain {domain}")
+            auth_result = adept.authenticate(domain, username, password)
+            print(f"[LOGIN] Auth result: {auth_result}")
+            print(f"[LOGIN] adept.login: {adept.login}")
+            print(f"[LOGIN] adept.project: {adept.project}")
+            
+            if auth_result:
                 session['username'] = username
                 session['domain'] = domain
+                session['adept_authenticated'] = True
+                print(f"✓ Login successful - Project is {'SET' if adept.project else 'NONE'}")
                 return redirect(url_for('dashboard'))
             else:
+                print(f"✗ Authentication failed")
                 flash('Invalid Adept credentials or domain.', 'error')
         else:
             # Fallback for dev if Adept not available
             if username == 'admin' and password == 'admin':
                 session['username'] = username
                 session['domain'] = 'Dev'
+                session['adept_authenticated'] = False
                 return redirect(url_for('dashboard'))
             flash('Adept API not loaded. Use admin/admin for dev.', 'error')
             
@@ -337,11 +349,17 @@ def list_drive_items(site_id, drive_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/admin/api/projects', methods=['POST'])
-def create_project():
+@app.route('/admin/api/projects', methods=['GET', 'POST'])
+def handle_projects():
     if 'username' not in session:
         return jsonify({"error": "Unauthorized"}), 401
-        
+    
+    if request.method == 'GET':
+        # Return all projects
+        projects = db.get_projects()
+        return jsonify(projects)
+    
+    # POST - create new project
     data = request.json
     name = data.get('name')
     work_area_path = data.get('work_area_path')
@@ -349,6 +367,11 @@ def create_project():
     sp_site_id = data.get('sp_site_id', '').strip()
     sp_drive_id = data.get('sp_drive_id', '').strip()
     sp_folder_id = data.get('sp_folder_id', '').strip()
+    adept_work_area_id = data.get('adept_work_area_id', '').strip()
+    adept_library_id = data.get('adept_library_id', '').strip()
+    auto_checkin = data.get('auto_checkin', False)
+    name_filter_pattern = data.get('name_filter_pattern', '').strip()
+    file_type_filter = data.get('file_type_filter', '').strip()
     
     if not name or not work_area_path:
         return jsonify({"error": "Name and Work Area Path are required"}), 400
@@ -356,8 +379,29 @@ def create_project():
     # Ensure physical path exists
     os.makedirs(work_area_path, exist_ok=True)
         
-    project = db.create_project(name, work_area_path, flatten_uploads, sp_site_id, sp_drive_id, sp_folder_id)
+    project = db.create_project(name, work_area_path, flatten_uploads, sp_site_id, sp_drive_id, sp_folder_id,
+                                adept_work_area_id, adept_library_id, auto_checkin, 
+                                name_filter_pattern, file_type_filter)
     return jsonify(project)
+
+@app.route('/admin/api/projects/<project_id>', methods=['PUT'])
+def update_project(project_id):
+    if 'username' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    data = request.json
+    project = db.update_project(project_id, **data)
+    if project:
+        return jsonify(project)
+    return jsonify({"error": "Project not found"}), 404
+
+@app.route('/admin/api/projects/<project_id>', methods=['DELETE'])
+def delete_project(project_id):
+    if 'username' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    db.delete_project(project_id)
+    return jsonify({"message": "Project deleted successfully"})
 
 @app.route('/admin/api/links', methods=['POST'])
 def create_link():
@@ -372,6 +416,94 @@ def create_link():
         
     link = db.create_link(project_id, session['username'])
     return jsonify(link)
+
+@app.route('/admin/api/adept/work_areas', methods=['GET'])
+def get_adept_work_areas():
+    if 'username' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    print(f"[WORK_AREAS] adept object exists: {adept is not None}")
+    if adept:
+        print(f"[WORK_AREAS] adept.login: {adept.login}")
+        print(f"[WORK_AREAS] adept.project: {adept.project}")
+    
+    if not adept:
+        return jsonify({"error": "Adept API not initialized"}), 500
+    
+    if not adept.project:
+        return jsonify({"error": "Not connected to Adept. Please log in again.", "debug": "adept.project is None"}), 400
+    
+    work_areas = adept.get_work_areas()
+    return jsonify({"work_areas": work_areas})
+
+@app.route('/admin/api/adept/libraries', methods=['GET'])
+def get_adept_libraries():
+    if 'username' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    print(f"[LIBRARIES] adept object exists: {adept is not None}")
+    if adept:
+        print(f"[LIBRARIES] adept.login: {adept.login}")
+        print(f"[LIBRARIES] adept.project: {adept.project}")
+    
+    if not adept:
+        return jsonify({"error": "Adept API not initialized"}), 500
+        
+    if not adept.project:
+        return jsonify({"error": "Not connected to Adept. Please log in again.", "debug": "adept.project is None"}), 400
+    
+    libraries = adept.get_libraries()
+    return jsonify({"libraries": libraries})
+
+@app.route('/admin/api/adept/checkin', methods=['POST'])
+def checkin_files():
+    if 'username' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    data = request.json
+    project_id = data.get('project_id')
+    library_id = data.get('library_id')
+    
+    if not project_id or not library_id:
+        return jsonify({"error": "Project ID and Library ID are required"}), 400
+    
+    project = db.get_project_by_id(project_id)
+    if not project:
+        return jsonify({"error": "Project not found"}), 404
+    
+    if not adept or not adept.project:
+        return jsonify({"error": "Not connected to Adept"}), 400
+    
+    # Get files from work area
+    work_area_path = project['work_area_path']
+    if not os.path.exists(work_area_path):
+        return jsonify({"error": "Work area path does not exist"}), 400
+    
+    results = []
+    name_pattern = project.get('name_filter_pattern', '')
+    file_type_filter = project.get('file_type_filter', '')
+    
+    for filename in os.listdir(work_area_path):
+        file_path = os.path.join(work_area_path, filename)
+        
+        if not os.path.isfile(file_path):
+            continue
+        
+        # Apply filters
+        if name_pattern and name_pattern not in filename:
+            continue
+        
+        if file_type_filter:
+            file_ext = os.path.splitext(filename)[1].lower().lstrip('.')
+            allowed_types = [t.strip().lower() for t in file_type_filter.split(',')]
+            if file_ext not in allowed_types:
+                continue
+        
+        # Check in the file
+        result = adept.check_in_file(file_path, library_id, filename)
+        results.append(result)
+    
+    return jsonify({"results": results, "total": len(results)})
 
 # --- Public Routes ---
 
@@ -540,6 +672,33 @@ def handle_binary_upload(link_uuid):
     # Update database
     db.add_or_update_file(project['id'], filename, file_md5, relative_path)
     
+    # Auto check-in if enabled
+    if project.get('auto_checkin') and adept and adept.project:
+        library_id = project.get('adept_library_id')
+        if library_id:
+            # Apply filters
+            name_pattern = project.get('name_filter_pattern', '')
+            file_type_filter = project.get('file_type_filter', '')
+            
+            should_checkin = True
+            if name_pattern and name_pattern not in filename:
+                should_checkin = False
+            
+            if file_type_filter:
+                file_ext = os.path.splitext(filename)[1].lower().lstrip('.')
+                allowed_types = [t.strip().lower() for t in file_type_filter.split(',')]
+                if file_ext not in allowed_types:
+                    should_checkin = False
+            
+            if should_checkin:
+                checkin_result = adept.check_in_file(final_path, library_id, filename)
+                if checkin_result.get('success'):
+                    return jsonify({
+                        "message": "File uploaded and checked in successfully", 
+                        "filename": filename,
+                        "status": "checked_in"
+                    })
+    
     return jsonify({
         "message": "File uploaded successfully", 
         "filename": filename,
@@ -614,6 +773,33 @@ def handle_upload(link_uuid):
         
         # 5. Update Database
         db.add_or_update_file(project['id'], filename, file_md5, relative_path)
+        
+        # 6. Auto check-in if enabled
+        if project.get('auto_checkin') and adept and adept.project:
+            library_id = project.get('adept_library_id')
+            if library_id:
+                # Apply filters
+                name_pattern = project.get('name_filter_pattern', '')
+                file_type_filter = project.get('file_type_filter', '')
+                
+                should_checkin = True
+                if name_pattern and name_pattern not in filename:
+                    should_checkin = False
+                
+                if file_type_filter:
+                    file_ext = os.path.splitext(filename)[1].lower().lstrip('.')
+                    allowed_types = [t.strip().lower() for t in file_type_filter.split(',')]
+                    if file_ext not in allowed_types:
+                        should_checkin = False
+                
+                if should_checkin:
+                    checkin_result = adept.check_in_file(final_path, library_id, filename)
+                    if checkin_result.get('success'):
+                        return jsonify({
+                            "message": "File uploaded and checked in successfully", 
+                            "filename": filename,
+                            "status": "checked_in"
+                        })
         
         return jsonify({
             "message": "File uploaded successfully", 

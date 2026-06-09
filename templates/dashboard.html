@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Adept Portal - Dashboard</title>
+    <title>Adept Portal - Admin Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -15,6 +15,8 @@
             --text-main: #1e293b;
             --text-muted: #64748b;
             --border: #e2e8f0;
+            --success: #10b981;
+            --danger: #ef4444;
         }
 
         body {
@@ -34,13 +36,41 @@
             align-items: center;
             position: sticky;
             top: 0;
-            z-index: 10;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
 
         .navbar h1 {
             margin: 0;
             font-size: 1.25rem;
             font-weight: 600;
+            color: var(--primary);
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 1rem;
+            margin: 0 2rem;
+        }
+
+        .nav-tab {
+            padding: 0.75rem 1.5rem;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            transition: all 0.2s;
+        }
+
+        .nav-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .nav-tab:hover {
             color: var(--primary);
         }
 
@@ -63,12 +93,17 @@
         }
 
         .container {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 2rem;
-            display: grid;
-            grid-template-columns: 350px 1fr;
-            gap: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
         }
 
         .card {
@@ -76,52 +111,44 @@
             border: 1px solid var(--border);
             border-radius: 12px;
             padding: 1.5rem;
-            height: fit-content;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            margin-bottom: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
 
         .card-title {
             font-size: 1.125rem;
             font-weight: 600;
-            margin-top: 0;
-            margin-bottom: 1.5rem;
-            color: var(--text-main);
+            margin: 0 0 1.5rem 0;
         }
 
         .form-group {
-            margin-bottom: 1.25rem;
+            margin-bottom: 1rem;
         }
 
         label {
             display: block;
             margin-bottom: 0.5rem;
             font-size: 0.875rem;
-            color: var(--text-main);
             font-weight: 500;
         }
 
-        input {
+        input, select, textarea {
             width: 100%;
-            padding: 0.75rem 1rem;
-            background: #fff;
+            padding: 0.75rem;
             border: 1px solid var(--border);
             border-radius: 6px;
-            color: var(--text-main);
             font-size: 0.875rem;
             font-family: inherit;
-            box-sizing: border-box;
-            transition: all 0.2s;
         }
 
-        input:focus {
+        input:focus, select:focus, textarea:focus {
             outline: none;
             border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(0, 71, 171, 0.1);
         }
 
         button {
-            width: 100%;
-            padding: 0.75rem;
+            padding: 0.75rem 1.5rem;
             background: var(--primary);
             color: white;
             border: none;
@@ -135,47 +162,53 @@
         button:hover {
             background: var(--primary-hover);
         }
-        
+
         button.secondary {
-            background: #fff;
+            background: white;
             color: var(--primary);
             border: 1px solid var(--primary);
         }
-        
+
         button.secondary:hover {
             background: #f0f4fa;
         }
 
-        .project-list {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
+        button.danger {
+            background: var(--danger);
         }
 
-        .project-item {
-            background: #fff;
+        button.danger:hover {
+            background: #dc2626;
+        }
+
+        .project-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .project-card {
+            background: white;
             border: 1px solid var(--border);
             border-radius: 12px;
-            padding: 1.25rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            padding: 1.5rem;
             transition: box-shadow 0.2s;
         }
 
-        .project-item:hover {
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        .project-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
         .project-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 0.5rem;
+            margin-bottom: 1rem;
         }
 
         .project-name {
             font-weight: 600;
             font-size: 1.125rem;
-            color: var(--text-main);
             margin: 0;
         }
 
@@ -187,57 +220,65 @@
             padding: 0.25rem 0.5rem;
             border-radius: 4px;
             margin: 0.5rem 0;
-            display: inline-block;
         }
 
-        .link-list {
-            margin-top: 1rem;
-            border-top: 1px solid var(--border);
-            padding-top: 1rem;
-        }
-
-        .link-item {
+        .project-actions {
             display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .project-actions button {
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .badge.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge.warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
             align-items: center;
-            justify-content: space-between;
-            background: #f8fafc;
-            border: 1px solid var(--border);
-            padding: 0.5rem 0.75rem;
-            border-radius: 6px;
-            margin-bottom: 0.5rem;
+            justify-content: center;
         }
 
-        .link-url {
-            font-family: monospace;
-            font-size: 0.75rem;
-            color: var(--primary);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 300px;
+        .modal.active {
+            display: flex;
         }
 
-        .copy-btn {
-            background: transparent;
-            color: var(--primary);
-            border: none;
-            width: auto;
-            padding: 0.25rem 0.5rem;
-            font-size: 0.75rem;
-            margin: 0;
-            font-weight: 600;
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
-        .copy-btn:hover {
-            background: rgba(0, 71, 171, 0.1);
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 3rem 1rem;
-            color: var(--text-muted);
-        }
-        
         .toast {
             position: fixed;
             bottom: 2rem;
@@ -249,303 +290,400 @@
             box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
             transform: translateY(100px);
             opacity: 0;
-            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            z-index: 100;
+            transition: all 0.3s;
+            z-index: 2000;
         }
-        
+
         .toast.show {
             transform: translateY(0);
             opacity: 1;
         }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
     </style>
 </head>
 <body>
+
     <nav class="navbar">
-        <h1>Adept Portal</h1>
+        <h1>🚀 Adept Portal</h1>
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('projects')">Projects</button>
+            <button class="nav-tab" onclick="showTab('settings')">Settings</button>
+            <button class="nav-tab" onclick="showTab('adept')">Adept Config</button>
+        </div>
         <div class="user-info">
             <span style="font-size: 0.875rem; color: var(--text-muted);">
-                Logged in as <strong style="color: var(--text-main);">{{ session.domain }}\{{ session.username }}</strong>
+                <strong>{{ session.domain }}\{{ session.username }}</strong>
             </span>
             <a href="{{ url_for('logout') }}" class="logout-btn">Sign Out</a>
         </div>
     </nav>
 
     <div class="container">
-        <!-- Sidebar: Create Project -->
-        <aside>
-            <div class="card" style="margin-bottom: 2rem;">
-                <h2 class="card-title">System Settings</h2>
+        <!-- PROJECTS TAB -->
+        <div id="tab-projects" class="tab-content active">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h2 style="margin: 0;">Active Projects</h2>
+                <button onclick="openCreateProjectModal()">+ New Project</button>
+            </div>
+
+            {% if not projects %}
+            <div class="card" style="text-align: center; padding: 3rem;">
+                <p style="color: var(--text-muted); margin: 0;">No projects yet. Click "New Project" to get started.</p>
+            </div>
+            {% else %}
+            <div class="project-grid">
+                {% for project in projects %}
+                <div class="project-card">
+                    <div class="project-header">
+                        <div>
+                            <h3 class="project-name">{{ project.name }}</h3>
+                            {% if project.get('auto_checkin') %}
+                            <span class="badge success">Auto Check-In</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="project-path">{{ project.work_area_path }}</div>
+                    
+                    {% if project.get('adept_library_id') %}
+                    <p style="font-size: 0.8rem; margin: 0.5rem 0;">
+                        📚 Library: <strong>{{ project.adept_library_id }}</strong>
+                    </p>
+                    {% endif %}
+                    
+                    {% if project.get('file_type_filter') %}
+                    <p style="font-size: 0.8rem; margin: 0.5rem 0;">
+                        🔍 Types: {{ project.file_type_filter }}
+                    </p>
+                    {% endif %}
+
+                    <div class="project-actions">
+                        <button class="secondary" onclick="generateLink('{{ project.id }}')">+ Share Link</button>
+                        <button class="secondary" onclick="editProject('{{ project.id }}')">Edit</button>
+                        {% if project.get('adept_library_id') %}
+                        <button onclick="manualCheckin('{{ project.id }}', '{{ project.adept_library_id }}')">Check-In Now</button>
+                        {% endif %}
+                        <button class="danger" onclick="deleteProject('{{ project.id }}', '{{ project.name }}')">Delete</button>
+                    </div>
+
+                    <!-- Links -->
+                    <div style="margin-top: 1rem; border-top: 1px solid var(--border); padding-top: 1rem;">
+                        {% set project_links = links | selectattr('project_id', 'equalto', project.id) | list %}
+                        {% if project_links %}
+                        <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0 0 0.5rem 0;">Share Links:</p>
+                        {% for link in project_links %}
+                        <div style="display: flex; gap: 0.5rem; margin-bottom: 0.25rem;">
+                            <input readonly value="{{ base_url }}/s/{{ link.uuid }}" 
+                                   style="flex: 1; font-size: 0.7rem; padding: 0.4rem;" 
+                                   onclick="this.select()">
+                            <button class="secondary" style="padding: 0.4rem 0.75rem; font-size: 0.7rem;" 
+                                    onclick="copyToClipboard('{{ base_url }}/s/{{ link.uuid }}')">Copy</button>
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">No share links yet</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- SETTINGS TAB -->
+        <div id="tab-settings" class="tab-content">
+            <h2>Portal Settings</h2>
+            
+            <div class="card">
+                <h3 class="card-title">General Configuration</h3>
                 <form id="settingsForm">
                     <div class="form-group">
                         <label for="base_url">Portal Public URL</label>
                         <div style="display: flex; gap: 0.5rem;">
-                            <input type="text" id="base_url" value="{{ base_url }}" placeholder="http://YOUR-PUBLIC-IP:5000" required style="flex: 1;">
-                            <button type="button" onclick="detectPublicIP()" style="width: auto; padding: 0.75rem 1rem; white-space: nowrap;">🔍 Detect IP</button>
+                            <input type="text" id="base_url" value="{{ base_url }}" required style="flex: 1;">
+                            <button type="button" onclick="detectPublicIP()" class="secondary">Detect IP</button>
                         </div>
-                        <small style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 0.25rem;">
-                            Must be accessible from where users will access the portal. Private IPs (10.x, 192.168.x, 172.16.x) won't work for external users.
-                        </small>
                     </div>
-                    
-                    <h3 style="font-size: 0.875rem; margin-top: 1.5rem; margin-bottom: 1rem; color: var(--text-main);">Azure AD Credentials (SharePoint)</h3>
-                    
-                    {% if sp_account_username %}
-                    <div style="background: #ecfdf5; border: 1px solid #10b981; padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">
-                        <p style="margin: 0; color: #047857; font-size: 0.875rem;"><strong>Connected Account:</strong> {{ sp_account_username }}</p>
-                    </div>
-                    {% endif %}
-                    
-                    <div class="form-group" style="background: #fef3c7; border: 1px solid #f59e0b; padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">
-                        <label style="display: flex; align-items: center; gap: 0.5rem; margin: 0; cursor: pointer;">
-                            <input type="checkbox" id="upload_page_enabled" {% if upload_page_enabled %}checked{% endif %} style="width: auto; margin: 0;">
-                            <span style="font-weight: 600; color: #92400e;">Enable Local Upload Page</span>
+
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="upload_page_enabled" {% if upload_page_enabled %}checked{% endif %} style="width: auto; margin-right: 0.5rem;">
+                            Enable Upload Page (uncheck to show "Transitioned" message)
                         </label>
-                        <p style="margin: 0.5rem 0 0 1.75rem; font-size: 0.75rem; color: #78350f;">When disabled, users see "Portal Transitioned" message. Enable this to allow direct uploads to work areas.</p>
                     </div>
-                    
-                    <button type="button" class="secondary" onclick="startDeviceFlow()" style="margin-bottom: 1rem;">
-                        Connect Microsoft Account (Interactive)
-                    </button>
-                    
-                    <p style="font-size: 0.75rem; color: var(--text-muted); text-align: center; margin-bottom: 1rem;">— OR (Advanced Setup) —</p>
-                    
-                    <div class="form-group">
-                        <label for="sp_tenant_id">Tenant ID</label>
-                        <input type="text" id="sp_tenant_id" value="{{ sp_tenant_id }}" placeholder="Azure AD Tenant ID">
-                    </div>
-                    <div class="form-group">
-                        <label for="sp_client_id">Client ID</label>
-                        <input type="text" id="sp_client_id" value="{{ sp_client_id }}" placeholder="App Registration Client ID">
-                    </div>
-                    <div class="form-group">
-                        <label for="sp_client_secret">Client Secret</label>
-                        <input type="password" id="sp_client_secret" value="{{ sp_client_secret }}" placeholder="Client Secret">
-                    </div>
-                    
-                    <button type="submit" class="secondary">Save Settings</button>
+
+                    <button type="submit">Save Settings</button>
                 </form>
             </div>
 
             <div class="card">
-                <h2 class="card-title">New Portal Project</h2>
-                <form id="createProjectForm">
-                    <div class="form-group">
-                        <label for="name">Project Name</label>
-                        <input type="text" id="name" placeholder="e.g. Acme HQ Renovation" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="path">Adept Work Area Path</label>
-                        <input type="text" id="path" placeholder="C:\AdeptWorkAreas\AcmeHQ" required>
-                    </div>
-                    
-                    <h3 style="font-size: 0.875rem; margin-top: 1.5rem; margin-bottom: 1rem; color: var(--text-main);">SharePoint Sync Target</h3>
-                    
-                    <button type="button" class="secondary" onclick="openSharePointBrowser()" style="margin-bottom: 1rem;">
-                        📁 Browse SharePoint Sites
-                    </button>
-                    
-                    <div id="sp_selection_display" style="display: none; background: #ecfdf5; border: 1px solid #10b981; padding: 0.75rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.75rem;">
-                        <div style="color: #047857;"><strong>Selected:</strong></div>
-                        <div id="sp_selection_text" style="color: #065f46; margin-top: 0.25rem;"></div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="sp_site_id">Site ID</label>
-                        <input type="text" id="sp_site_id" placeholder="Optional or browse above" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label for="sp_drive_id">Drive ID</label>
-                        <input type="text" id="sp_drive_id" placeholder="Optional or browse above" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label for="sp_folder_id">Folder ID</label>
-                        <input type="text" id="sp_folder_id" placeholder="Optional or browse above" readonly>
-                    </div>
-
-                    <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem; margin-top: 1rem;">
-                        <input type="checkbox" id="flatten" checked style="width: auto;">
-                        <label for="flatten" style="margin: 0; font-weight: normal; cursor: pointer;">Flatten nested folders on upload (Recommended)</label>
-                    </div>
-                    <button type="submit" style="margin-top: 1rem;">Create Project</button>
-                </form>
-            </div>
-        </aside>
-
-        <!-- Main Content: Project List -->
-        <main>
-            <div class="card" style="background: transparent; border: none; padding: 0; box-shadow: none;">
-                <h2 class="card-title" style="margin-left: 0.5rem;">Active Projects</h2>
+                <h3 class="card-title">SharePoint Authentication</h3>
                 
-                <div class="project-list">
-                    {% if not projects %}
-                        <div class="empty-state">
-                            <p>No projects configured yet.</p>
-                            <p style="font-size: 0.875rem; opacity: 0.7;">Create a project on the left to get started.</p>
-                        </div>
-                    {% endif %}
+                {% if sp_account_username %}
+                <div style="background: #d1fae5; border: 1px solid var(--success); padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">
+                    <strong>✓ Connected:</strong> {{ sp_account_username }}
+                </div>
+                {% endif %}
 
-                    {% for project in projects %}
-                        <div class="project-item">
-                            <div class="project-header">
-                                <div>
-                                    <h3 class="project-name">{{ project.name }}</h3>
-                                    <div class="project-path">{{ project.work_area_path }}</div>
-                                </div>
-                                <button class="secondary" style="width: auto;" onclick="generateLink('{{ project.id }}')">
-                                    + Share Link
-                                </button>
-                            </div>
-                            
-                            <div class="link-list" id="links-{{ project.id }}">
-                                {% for link in links %}
-                                    {% if link.project_id == project.id %}
-                                        <div class="link-item">
-                                            <a href="{{ link.full_url }}" target="_blank" class="link-url">{{ link.full_url }}</a>
-                                            <button class="copy-btn" onclick="copyToClipboard('{{ link.full_url }}')">Copy</button>
-                                        </div>
-                                    {% endif %}
-                                {% endfor %}
-                            </div>
-                        </div>
-                    {% endfor %}
+                <button type="button" onclick="startDeviceFlow()" class="secondary">Connect Microsoft Account</button>
+
+                <details style="margin-top: 1rem;">
+                    <summary style="cursor: pointer; font-weight: 500; margin-bottom: 1rem;">Advanced: Manual Credentials</summary>
+                    <div class="form-group">
+                        <label>Tenant ID</label>
+                        <input type="text" id="sp_tenant_id" value="{{ sp_tenant_id }}">
+                    </div>
+                    <div class="form-group">
+                        <label>Client ID</label>
+                        <input type="text" id="sp_client_id" value="{{ sp_client_id }}">
+                    </div>
+                    <div class="form-group">
+                        <label>Client Secret</label>
+                        <input type="password" id="sp_client_secret" value="{{ sp_client_secret }}">
+                    </div>
+                </details>
+            </div>
+        </div>
+
+        <!-- ADEPT CONFIG TAB -->
+        <div id="tab-adept" class="tab-content">
+            <h2>Adept Configuration</h2>
+            
+            <div class="card">
+                <h3 class="card-title">Connection Status</h3>
+                <p><strong>Domain:</strong> {{ session.domain }}</p>
+                <p><strong>User:</strong> {{ session.username }}</p>
+                <p style="color: var(--success);">✓ Connected to Adept</p>
+            </div>
+
+            <div class="grid-2">
+                <div class="card">
+                    <h3 class="card-title">Work Areas</h3>
+                    <button onclick="loadAdeptWorkAreas()" class="secondary">Refresh Work Areas</button>
+                    <div id="workAreasList" style="margin-top: 1rem; max-height: 400px; overflow-y: auto;"></div>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-title">Libraries</h3>
+                    <button onclick="loadAdeptLibraries()" class="secondary">Refresh Libraries</button>
+                    <div id="librariesList" style="margin-top: 1rem; max-height: 400px; overflow-y: auto;"></div>
                 </div>
             </div>
-        </main>
-    </div>
-    
-    <div id="toast" class="toast">Link copied to clipboard!</div>
-
-    <!-- Device Flow Modal -->
-    <div id="deviceFlowModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center;">
-        <div class="card" style="width: 100%; max-width: 400px; text-align: center;">
-            <h2 class="card-title">Microsoft Login</h2>
-            <p style="margin-bottom: 1rem; color: var(--text-muted); font-size: 0.875rem;">
-                Please follow the link below and enter the code to securely connect your Microsoft account.
-            </p>
-            <div style="font-size: 2rem; font-weight: bold; letter-spacing: 4px; color: var(--primary); margin: 1.5rem 0;" id="dfCode">
-                ABCD-1234
-            </div>
-            <a href="#" target="_blank" id="dfLink" style="display: inline-block; background: var(--primary); color: white; padding: 0.75rem 1.5rem; border-radius: 6px; text-decoration: none; font-weight: 500; margin-bottom: 1.5rem;">
-                Open Login Page
-            </a>
-            <p style="font-size: 0.875rem; color: var(--text-muted);" id="dfStatus">
-                Waiting for authorization...
-            </p>
-            <button class="secondary" style="margin-top: 1rem;" onclick="closeDeviceFlow()">Cancel</button>
         </div>
     </div>
 
-    <!-- SharePoint Browser Modal -->
-    <div id="spBrowserModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center;">
-        <div class="card" style="width: 100%; max-width: 700px; max-height: 80vh; overflow: hidden; display: flex; flex-direction: column;">
-            <h2 class="card-title" style="margin-bottom: 1rem;">Browse SharePoint</h2>
-            
-            <div id="spBreadcrumb" style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1rem; padding: 0.5rem; background: #f8fafc; border-radius: 6px;">
-                Select a site...
-            </div>
-            
-            <div id="spBrowserContent" style="flex: 1; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; padding: 1rem; min-height: 300px;">
-                <p style="text-align: center; color: var(--text-muted);">Loading...</p>
-            </div>
-            
-            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-                <button class="secondary" onclick="closeSharePointBrowser()" style="flex: 1;">Cancel</button>
-                <button id="spSelectBtn" onclick="selectSharePointFolder()" style="flex: 1;" disabled>Select This Folder</button>
-            </div>
+    <!-- CREATE/EDIT PROJECT MODAL -->
+    <div id="projectModal" class="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle">Create New Project</h2>
+            <form id="projectForm">
+                <input type="hidden" id="project_id">
+                
+                <div class="form-group">
+                    <label>Project Name*</label>
+                    <input type="text" id="name" required placeholder="e.g. Acme HQ Renovation">
+                </div>
+
+                <div class="form-group">
+                    <label>Work Area Path*</label>
+                    <input type="text" id="path" required placeholder="C:\AdeptWorkAreas\AcmeHQ">
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="flatten" checked style="width: auto; margin-right: 0.5rem;">
+                        Flatten nested folders on upload
+                    </label>
+                </div>
+
+                <h3 style="margin-top: 1.5rem; margin-bottom: 1rem; font-size: 1rem;">Adept Integration</h3>
+
+                <div class="form-group">
+                    <label>Adept Work Area ID</label>
+                    <input type="text" id="adept_work_area_id" placeholder="Optional: Link to Adept work area">
+                </div>
+
+                <div class="form-group">
+                    <label>Adept Library ID*</label>
+                    <input type="text" id="adept_library_id" placeholder="Target library for check-ins">
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="auto_checkin" style="width: auto; margin-right: 0.5rem;">
+                        Auto Check-In files on upload
+                    </label>
+                </div>
+
+                <h3 style="margin-top: 1.5rem; margin-bottom: 1rem; font-size: 1rem;">File Filters</h3>
+
+                <div class="form-group">
+                    <label>Name Pattern (substring match)</label>
+                    <input type="text" id="name_filter_pattern" placeholder='e.g. "Drawing" matches "Site_Plan_Drawing_01.dwg"'>
+                </div>
+
+                <div class="form-group">
+                    <label>File Types (comma-separated extensions)</label>
+                    <input type="text" id="file_type_filter" placeholder="e.g. dwg,pdf,docx">
+                </div>
+
+                <h3 style="margin-top: 1.5rem; margin-bottom: 1rem; font-size: 1rem;">SharePoint Sync (Optional)</h3>
+
+                <div class="form-group">
+                    <label>Site ID</label>
+                    <input type="text" id="sp_site_id">
+                </div>
+
+                <div class="form-group">
+                    <label>Drive ID</label>
+                    <input type="text" id="sp_drive_id">
+                </div>
+
+                <div class="form-group">
+                    <label>Folder ID</label>
+                    <input type="text" id="sp_folder_id">
+                </div>
+
+                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button type="button" onclick="closeProjectModal()" class="secondary" style="flex: 1;">Cancel</button>
+                    <button type="submit" style="flex: 1;">Save Project</button>
+                </div>
+            </form>
         </div>
     </div>
+
+    <!-- Device Flow Modal (SharePoint Auth) -->
+    <div id="deviceFlowModal" class="modal">
+        <div class="modal-content" style="text-align: center; max-width: 400px;">
+            <h2>Microsoft Login</h2>
+            <p style="color: var(--text-muted);">Enter this code at the link below:</p>
+            <div id="dfCode" style="font-size: 2rem; font-weight: bold; letter-spacing: 4px; color: var(--primary); margin: 1.5rem 0;"></div>
+            <a href="#" target="_blank" id="dfLink" style="display: inline-block; background: var(--primary); color: white; padding: 0.75rem 1.5rem; border-radius: 6px; text-decoration: none; font-weight: 500; margin-bottom: 1.5rem;">Open Login Page</a>
+            <p id="dfStatus" style="color: var(--text-muted);"></p>
+            <button class="secondary" onclick="closeDeviceFlow()">Cancel</button>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
 
     <script>
-        async function detectPublicIP() {
-            const btn = event.target;
-            const originalText = btn.innerText;
-            btn.innerText = 'Detecting...';
-            btn.disabled = true;
+        // Tab Management
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('tab-' + tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Toast Notification
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // Project Modal
+        function openCreateProjectModal() {
+            document.getElementById('modalTitle').textContent = 'Create New Project';
+            document.getElementById('projectForm').reset();
+            document.getElementById('project_id').value = '';
+            document.getElementById('projectModal').classList.add('active');
+        }
+
+        function closeProjectModal() {
+            document.getElementById('projectModal').classList.remove('active');
+        }
+
+        function editProject(projectId) {
+            // Fetch project data and populate form
+            fetch(`/admin/api/projects`)
+                .then(r => r.json())
+                .then(projects => {
+                    const project = projects.find(p => p.id === projectId);
+                    if (project) {
+                        document.getElementById('modalTitle').textContent = 'Edit Project';
+                        document.getElementById('project_id').value = project.id;
+                        document.getElementById('name').value = project.name;
+                        document.getElementById('path').value = project.work_area_path;
+                        document.getElementById('flatten').checked = project.flatten_uploads;
+                        document.getElementById('adept_work_area_id').value = project.adept_work_area_id || '';
+                        document.getElementById('adept_library_id').value = project.adept_library_id || '';
+                        document.getElementById('auto_checkin').checked = project.auto_checkin || false;
+                        document.getElementById('name_filter_pattern').value = project.name_filter_pattern || '';
+                        document.getElementById('file_type_filter').value = project.file_type_filter || '';
+                        document.getElementById('sp_site_id').value = project.sp_site_id || '';
+                        document.getElementById('sp_drive_id').value = project.sp_drive_id || '';
+                        document.getElementById('sp_folder_id').value = project.sp_folder_id || '';
+                        document.getElementById('projectModal').classList.add('active');
+                    }
+                });
+        }
+
+        // Project Form Submit
+        document.getElementById('projectForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const projectId = document.getElementById('project_id').value;
+            const data = {
+                name: document.getElementById('name').value,
+                work_area_path: document.getElementById('path').value,
+                flatten_uploads: document.getElementById('flatten').checked,
+                adept_work_area_id: document.getElementById('adept_work_area_id').value,
+                adept_library_id: document.getElementById('adept_library_id').value,
+                auto_checkin: document.getElementById('auto_checkin').checked,
+                name_filter_pattern: document.getElementById('name_filter_pattern').value,
+                file_type_filter: document.getElementById('file_type_filter').value,
+                sp_site_id: document.getElementById('sp_site_id').value,
+                sp_drive_id: document.getElementById('sp_drive_id').value,
+                sp_folder_id: document.getElementById('sp_folder_id').value
+            };
+
+            const url = projectId ? `/admin/api/projects/${projectId}` : '/admin/api/projects';
+            const method = projectId ? 'PUT' : 'POST';
 
             try {
-                const res = await fetch('/admin/api/detect_public_ip');
-                const data = await res.json();
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
                 
-                if (res.ok && data.saved) {
-                    alert(`Detected and saved public IP: ${data.ip}\n\nMake sure port 5000 is forwarded in your router!\n\nRefreshing page...`);
-                    window.location.reload();
+                if (res.ok) {
+                    showToast(projectId ? 'Project updated!' : 'Project created!');
+                    setTimeout(() => window.location.reload(), 1000);
                 } else {
-                    alert(`Error: ${data.error || 'Could not detect public IP'}\n\nYou may be behind NAT/firewall.\nFind your public IP at: https://whatismyipaddress.com\nThen enter it manually.`);
+                    showToast('Error saving project');
                 }
             } catch (err) {
-                alert('Network error detecting IP address');
-            } finally {
-                btn.innerText = originalText;
-                btn.disabled = false;
+                showToast('Network error');
+            }
+        });
+
+        // Delete Project
+        async function deleteProject(projectId, projectName) {
+            if (!confirm(`Delete project "${projectName}"?\n\nThis will remove all links and file tracking.`)) {
+                return;
+            }
+
+            try {
+                const res = await fetch(`/admin/api/projects/${projectId}`, { method: 'DELETE' });
+                if (res.ok) {
+                    showToast('Project deleted');
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    showToast('Error deleting project');
+                }
+            } catch (err) {
+                showToast('Network error');
             }
         }
 
-        document.getElementById('settingsForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = e.target.querySelector('button');
-            const originalText = btn.innerText;
-            btn.innerText = 'Saving...';
-            btn.disabled = true;
-
-            const public_base_url = document.getElementById('base_url').value;
-            const sp_tenant_id = document.getElementById('sp_tenant_id').value;
-            const sp_client_id = document.getElementById('sp_client_id').value;
-            const sp_client_secret = document.getElementById('sp_client_secret').value;
-            const upload_page_enabled = document.getElementById('upload_page_enabled').checked;
-
-            try {
-                const res = await fetch('/admin/api/settings', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ public_base_url, sp_tenant_id, sp_client_id, sp_client_secret, upload_page_enabled })
-                });
-                if (res.ok) {
-                    window.location.reload();
-                } else {
-                    alert('Failed to save settings');
-                }
-            } catch (err) {
-                alert('Error connecting to server');
-            } finally {
-                btn.innerText = originalText;
-                btn.disabled = false;
-            }
-        });
-
-        document.getElementById('createProjectForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = e.target.querySelector('button');
-            const originalText = btn.innerText;
-            btn.innerText = 'Creating...';
-            btn.disabled = true;
-
-            const name = document.getElementById('name').value;
-            const work_area_path = document.getElementById('path').value;
-            const flatten_uploads = document.getElementById('flatten').checked;
-            const sp_site_id = document.getElementById('sp_site_id').value;
-            const sp_drive_id = document.getElementById('sp_drive_id').value;
-            const sp_folder_id = document.getElementById('sp_folder_id').value;
-
-            try {
-                const res = await fetch('/admin/api/projects', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, work_area_path, flatten_uploads, sp_site_id, sp_drive_id, sp_folder_id })
-                });
-                if (res.ok) {
-                    window.location.reload();
-                } else {
-                    alert('Failed to create project');
-                }
-            } catch (err) {
-                console.error(err);
-                alert('Error connecting to server');
-            } finally {
-                btn.innerText = originalText;
-                btn.disabled = false;
-            }
-        });
-
+        // Generate Link
         async function generateLink(projectId) {
             try {
                 const res = await fetch('/admin/api/links', {
@@ -554,245 +692,216 @@
                     body: JSON.stringify({ project_id: projectId })
                 });
                 if (res.ok) {
-                    window.location.reload();
+                    showToast('Link created!');
+                    setTimeout(() => window.location.reload(), 1000);
                 } else {
-                    alert('Failed to generate link');
+                    showToast('Error creating link');
                 }
             } catch (err) {
-                console.error(err);
+                showToast('Network error');
             }
         }
-        
+
+        // Copy to Clipboard
         function copyToClipboard(text) {
-            navigator.clipboard.writeText(text).then(() => {
-                const toast = document.getElementById('toast');
-                toast.classList.add('show');
-                setTimeout(() => toast.classList.remove('show'), 3000);
-            });
+            navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard!'));
         }
 
+        // Manual Check-In
+        async function manualCheckin(projectId, libraryId) {
+            if (!confirm('Check in all files from work area to Adept library?')) return;
+
+            showToast('Starting check-in...');
+            
+            try {
+                const res = await fetch('/admin/api/adept/checkin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ project_id: projectId, library_id: libraryId })
+                });
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    showToast(`Check-in complete: ${data.total} files processed`);
+                } else {
+                    showToast('Check-in failed');
+                }
+            } catch (err) {
+                showToast('Network error');
+            }
+        }
+
+        // Settings Form
+        document.getElementById('settingsForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const data = {
+                public_base_url: document.getElementById('base_url').value,
+                upload_page_enabled: document.getElementById('upload_page_enabled').checked,
+                sp_tenant_id: document.getElementById('sp_tenant_id').value,
+                sp_client_id: document.getElementById('sp_client_id').value,
+                sp_client_secret: document.getElementById('sp_client_secret').value
+            };
+
+            try {
+                const res = await fetch('/admin/api/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (res.ok) {
+                    showToast('Settings saved!');
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    showToast('Error saving settings');
+                }
+            } catch (err) {
+                showToast('Network error');
+            }
+        });
+
+        // Detect Public IP
+        async function detectPublicIP() {
+            try {
+                const res = await fetch('/admin/api/detect_public_ip');
+                const data = await res.json();
+                
+                if (res.ok && data.saved) {
+                    showToast('IP detected and saved!');
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    showToast('Could not detect public IP');
+                }
+            } catch (err) {
+                showToast('Network error');
+            }
+        }
+
+        // SharePoint Device Flow
         async function startDeviceFlow() {
             try {
                 const res = await fetch('/admin/api/sp/device_code', { method: 'POST' });
                 const data = await res.json();
                 
                 if (data.error) {
-                    alert('Error: ' + data.error);
+                    showToast('Error: ' + data.error);
                     return;
                 }
                 
-                document.getElementById('dfCode').innerText = data.user_code;
+                document.getElementById('dfCode').textContent = data.user_code;
                 document.getElementById('dfLink').href = data.verification_uri;
-                document.getElementById('dfStatus').innerText = 'Waiting for authorization...';
-                document.getElementById('dfStatus').style.color = 'var(--text-muted)';
-                document.getElementById('deviceFlowModal').style.display = 'flex';
+                document.getElementById('dfStatus').textContent = 'Waiting for authorization...';
+                document.getElementById('deviceFlowModal').classList.add('active');
                 
-                // Poll for token
                 pollDeviceToken(data.flow_id);
             } catch (e) {
-                alert('Network error starting device flow');
+                showToast('Network error');
             }
         }
-        
+
         function closeDeviceFlow() {
-            document.getElementById('deviceFlowModal').style.display = 'none';
+            document.getElementById('deviceFlowModal').classList.remove('active');
         }
-        
-        async function pollDeviceToken(flow_id) {
+
+        async function pollDeviceToken(flowId) {
             try {
                 const res = await fetch('/admin/api/sp/poll_token', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ flow_id })
+                    body: JSON.stringify({ flow_id: flowId })
                 });
                 const data = await res.json();
                 
                 if (res.ok && data.success) {
-                    document.getElementById('dfStatus').innerText = 'Connected successfully!';
-                    document.getElementById('dfStatus').style.color = '#10b981';
+                    document.getElementById('dfStatus').textContent = 'Connected!';
+                    showToast('SharePoint connected!');
                     setTimeout(() => window.location.reload(), 1500);
                 } else {
-                    alert('Login failed or timed out: ' + (data.details?.error_description || data.error));
+                    showToast('Login failed');
                     closeDeviceFlow();
                 }
             } catch(e) {
-                console.error(e);
+                showToast('Network error');
             }
         }
 
-        // SharePoint Browser
-        let spState = {
-            siteId: null,
-            siteName: null,
-            driveId: null,
-            driveName: null,
-            folderId: null,
-            folderName: null,
-            currentPath: []
-        };
+        // Load Adept Work Areas
+        async function loadAdeptWorkAreas() {
+            const container = document.getElementById('workAreasList');
+            container.innerHTML = '<p style="color: var(--text-muted);">Loading...</p>';
 
-        async function openSharePointBrowser() {
-            spState = { siteId: null, siteName: null, driveId: null, driveName: null, folderId: null, folderName: null, currentPath: [] };
-            document.getElementById('spBrowserModal').style.display = 'flex';
-            document.getElementById('spSelectBtn').disabled = true;
-            await loadSharePointSites();
-        }
-
-        function closeSharePointBrowser() {
-            document.getElementById('spBrowserModal').style.display = 'none';
-        }
-
-        async function loadSharePointSites() {
-            document.getElementById('spBreadcrumb').innerText = 'Select a site...';
-            document.getElementById('spBrowserContent').innerHTML = '<p style="text-align: center; color: var(--text-muted);">Loading sites...</p>';
-            
             try {
-                const res = await fetch('/admin/api/sp/sites');
+                const res = await fetch('/admin/api/adept/work_areas');
                 const data = await res.json();
                 
-                if (data.error) {
-                    document.getElementById('spBrowserContent').innerHTML = `<p style="color: #ef4444;">Error: ${data.error}. Please authenticate first.</p>`;
-                    return;
-                }
-                
-                let html = '<div style="display: flex; flex-direction: column; gap: 0.5rem;">';
-                for (const site of data.sites) {
-                    html += `
-                        <div onclick="selectSite('${site.id}', '${site.name.replace(/'/g, "\\'")}')" 
-                             style="padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: all 0.2s;"
-                             onmouseover="this.style.background='var(--surface-hover)'" 
-                             onmouseout="this.style.background='white'">
-                            <div style="font-weight: 500;">📍 ${site.name}</div>
-                            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">${site.webUrl}</div>
-                        </div>
-                    `;
-                }
-                html += '</div>';
-                document.getElementById('spBrowserContent').innerHTML = html;
-            } catch (e) {
-                document.getElementById('spBrowserContent').innerHTML = '<p style="color: #ef4444;">Network error loading sites.</p>';
-            }
-        }
-
-        async function selectSite(siteId, siteName) {
-            spState.siteId = siteId;
-            spState.siteName = siteName;
-            spState.driveId = null;
-            spState.driveName = null;
-            spState.folderId = null;
-            spState.folderName = null;
-            spState.currentPath = [siteName];
-            
-            document.getElementById('spBreadcrumb').innerText = siteName + ' > Select a library...';
-            document.getElementById('spBrowserContent').innerHTML = '<p style="text-align: center; color: var(--text-muted);">Loading libraries...</p>';
-            document.getElementById('spSelectBtn').disabled = true;
-            
-            try {
-                const res = await fetch(`/admin/api/sp/sites/${siteId}/drives`);
-                const data = await res.json();
-                
-                let html = '<div style="display: flex; flex-direction: column; gap: 0.5rem;">';
-                html += `<div onclick="loadSharePointSites()" style="padding: 0.75rem; color: var(--primary); cursor: pointer;">← Back to Sites</div>`;
-                for (const drive of data.drives) {
-                    html += `
-                        <div onclick="selectDrive('${drive.id}', '${drive.name.replace(/'/g, "\\'")}')" 
-                             style="padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: all 0.2s;"
-                             onmouseover="this.style.background='var(--surface-hover)'" 
-                             onmouseout="this.style.background='white'">
-                            <div style="font-weight: 500;">📚 ${drive.name}</div>
-                            <div style="font-size: 0.75rem; color: var(--text-muted);">${drive.driveType}</div>
-                        </div>
-                    `;
-                }
-                html += '</div>';
-                document.getElementById('spBrowserContent').innerHTML = html;
-            } catch (e) {
-                document.getElementById('spBrowserContent').innerHTML = '<p style="color: #ef4444;">Error loading libraries.</p>';
-            }
-        }
-
-        async function selectDrive(driveId, driveName) {
-            spState.driveId = driveId;
-            spState.driveName = driveName;
-            spState.folderId = 'root';
-            spState.folderName = 'Root';
-            spState.currentPath = [spState.siteName, driveName, 'Root'];
-            
-            await loadDriveItems('root');
-        }
-
-        async function loadDriveItems(itemId) {
-            document.getElementById('spBreadcrumb').innerText = spState.currentPath.join(' > ');
-            document.getElementById('spBrowserContent').innerHTML = '<p style="text-align: center; color: var(--text-muted);">Loading folders...</p>';
-            document.getElementById('spSelectBtn').disabled = false;
-            
-            try {
-                const res = await fetch(`/admin/api/sp/sites/${spState.siteId}/drives/${spState.driveId}/items?item_id=${itemId}`);
-                const data = await res.json();
-                
-                let html = '<div style="display: flex; flex-direction: column; gap: 0.5rem;">';
-                
-                // Back button
-                if (itemId !== 'root') {
-                    html += `<div onclick="navigateUp()" style="padding: 0.75rem; color: var(--primary); cursor: pointer;">← Back</div>`;
+                if (res.ok && data.work_areas) {
+                    if (data.work_areas.length === 0) {
+                        container.innerHTML = `
+                            <div style="padding: 1rem; background: #fef3c7; border: 1px solid #f59e0b; border-radius: 6px;">
+                                <strong>No work areas found</strong>
+                                <p style="font-size: 0.875rem; margin: 0.5rem 0 0 0;">
+                                    Work areas must be created in the Adept desktop client first.
+                                    Once created, they will appear here.
+                                </p>
+                            </div>`;
+                    } else {
+                        container.innerHTML = data.work_areas.map(wa => 
+                            `<div style="padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 0.5rem;">
+                                <strong>${wa.id}</strong><br>
+                                <small style="color: var(--text-muted);">${wa.path}</small><br>
+                                <small>${wa.comment || 'No comment'}</small>
+                            </div>`
+                        ).join('');
+                    }
                 } else {
-                    html += `<div onclick="selectSite('${spState.siteId}', '${spState.siteName.replace(/'/g, "\\'")}')" style="padding: 0.75rem; color: var(--primary); cursor: pointer;">← Back to Libraries</div>`;
+                    container.innerHTML = `<p style="color: var(--danger);">Error: ${data.error || 'Unknown error'}</p>`;
+                    if (data.debug) {
+                        container.innerHTML += `<p style="font-size: 0.75rem; color: var(--text-muted);">${data.debug}</p>`;
+                    }
                 }
-                
-                // Show folders only
-                const folders = data.items.filter(i => i.isFolder);
-                if (folders.length === 0) {
-                    html += '<p style="color: var(--text-muted); padding: 1rem;">No subfolders in this location.</p>';
-                }
-                
-                for (const item of folders) {
-                    html += `
-                        <div onclick="navigateToFolder('${item.id}', '${item.name.replace(/'/g, "\\'")}')" 
-                             style="padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: all 0.2s;"
-                             onmouseover="this.style.background='var(--surface-hover)'" 
-                             onmouseout="this.style.background='white'">
-                            📁 ${item.name}
-                        </div>
-                    `;
-                }
-                
-                html += '</div>';
-                document.getElementById('spBrowserContent').innerHTML = html;
             } catch (e) {
-                document.getElementById('spBrowserContent').innerHTML = '<p style="color: #ef4444;">Error loading folder contents.</p>';
+                container.innerHTML = '<p style="color: var(--danger);">Network error: ' + e.message + '</p>';
             }
         }
 
-        async function navigateToFolder(folderId, folderName) {
-            spState.folderId = folderId;
-            spState.folderName = folderName;
-            spState.currentPath.push(folderName);
-            await loadDriveItems(folderId);
-        }
+        // Load Adept Libraries
+        async function loadAdeptLibraries() {
+            const container = document.getElementById('librariesList');
+            container.innerHTML = '<p style="color: var(--text-muted);">Loading...</p>';
 
-        async function navigateUp() {
-            // Pop current folder from path
-            spState.currentPath.pop();
-            
-            // Navigate to parent (we'd need to track parent IDs properly, but for simplicity we'll reload from root)
-            // In production, maintain a stack of folder IDs
-            if (spState.currentPath.length <= 3) {
-                // Back to root
-                spState.folderId = 'root';
-                await loadDriveItems('root');
+            try {
+                const res = await fetch('/admin/api/adept/libraries');
+                const data = await res.json();
+                
+                if (res.ok && data.libraries) {
+                    if (data.libraries.length === 0) {
+                        container.innerHTML = `
+                            <div style="padding: 1rem; background: #fef3c7; border: 1px solid #f59e0b; border-radius: 6px;">
+                                <strong>No libraries found</strong>
+                                <p style="font-size: 0.875rem; margin: 0.5rem 0 0 0;">
+                                    Libraries must be created in the Adept desktop client first.
+                                    Once created, they will appear here.
+                                </p>
+                            </div>`;
+                    } else {
+                        container.innerHTML = data.libraries.map(lib => 
+                            `<div style="padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 0.5rem;">
+                                <strong>${lib.id}</strong><br>
+                                <small style="color: var(--text-muted);">${lib.name}</small><br>
+                                <small>${lib.path}</small>
+                            </div>`
+                        ).join('');
+                    }
+                } else {
+                    container.innerHTML = `<p style="color: var(--danger);">Error: ${data.error || 'Unknown error'}</p>`;
+                    if (data.debug) {
+                        container.innerHTML += `<p style="font-size: 0.75rem; color: var(--text-muted);">${data.debug}</p>`;
+                    }
+                }
+            } catch (e) {
+                container.innerHTML = '<p style="color: var(--danger);">Network error: ' + e.message + '</p>';
             }
-        }
-
-        function selectSharePointFolder() {
-            document.getElementById('sp_site_id').value = spState.siteId;
-            document.getElementById('sp_drive_id').value = spState.driveId;
-            document.getElementById('sp_folder_id').value = spState.folderId;
-            
-            const selectionText = `${spState.siteName} > ${spState.driveName} > ${spState.currentPath.slice(2).join(' > ')}`;
-            document.getElementById('sp_selection_text').innerText = selectionText;
-            document.getElementById('sp_selection_display').style.display = 'block';
-            
-            closeSharePointBrowser();
         }
     </script>
 </body>

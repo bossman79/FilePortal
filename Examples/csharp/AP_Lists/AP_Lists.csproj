@@ -1,0 +1,123 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{DACF6065-3C76-4E22-9B24-1366CE469F2B}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>AP_Lists</RootNamespace>
+    <AssemblyName>AP_Lists</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\..\..\..\Adept\Client\PlugIns\Lists\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <RegisterForComInterop>true</RegisterForComInterop>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\..\..\..\..\Adept\Client\PlugIns\Lists\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <RegisterForComInterop>true</RegisterForComInterop>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Interop.AdeptCAC">
+      <HintPath>..\..\..\..\..\Adept\Client\Interop.AdeptCAC.dll</HintPath>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Interop.AdeptGui">
+      <HintPath>..\..\..\..\..\Adept\Client\Interop.AdeptGui.dll</HintPath>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Synergis.Adept.MainApi">
+      <HintPath>..\..\..\..\..\Adept\Client\Synergis.Adept.MainApi.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ContainerEdit.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ContainerEdit.Designer.cs">
+      <DependentUpon>ContainerEdit.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ContentsEdit.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ContentsEdit.Designer.cs">
+      <DependentUpon>ContentsEdit.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PI_Lists.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ListsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ListsForm.Designer.cs">
+      <DependentUpon>ListsForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SearchCriteriaEdit.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SearchCriteriaEdit.Designer.cs">
+      <DependentUpon>SearchCriteriaEdit.cs</DependentUpon>
+    </Compile>
+    <Compile Include="WidthEdit.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="WidthEdit.Designer.cs">
+      <DependentUpon>WidthEdit.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="ContainerEdit.resx">
+      <DependentUpon>ContainerEdit.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ContentsEdit.resx">
+      <DependentUpon>ContentsEdit.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ListsForm.resx">
+      <DependentUpon>ListsForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SearchCriteriaEdit.resx">
+      <DependentUpon>SearchCriteriaEdit.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="WidthEdit.resx">
+      <DependentUpon>WidthEdit.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

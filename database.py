@@ -40,7 +40,9 @@ class PortalDB:
             return default
         return self.data["settings"].get(key, default)
 
-    def create_project(self, name, work_area_path, flatten_uploads=True, sp_site_id='', sp_drive_id='', sp_folder_id=''):
+    def create_project(self, name, work_area_path, flatten_uploads=True, sp_site_id='', sp_drive_id='', sp_folder_id='', 
+                      adept_work_area_id='', adept_library_id='', auto_checkin=False, 
+                      name_filter_pattern='', file_type_filter=''):
         project = {
             "id": str(uuid.uuid4()),
             "name": name,
@@ -50,11 +52,33 @@ class PortalDB:
             "sp_drive_id": sp_drive_id,
             "sp_folder_id": sp_folder_id,
             "sp_synced_ids": [],
+            "adept_work_area_id": adept_work_area_id,
+            "adept_library_id": adept_library_id,
+            "auto_checkin": auto_checkin,
+            "name_filter_pattern": name_filter_pattern,
+            "file_type_filter": file_type_filter,
             "created_at": datetime.now().isoformat()
         }
         self.data["projects"].append(project)
         self._save()
         return project
+    
+    def update_project(self, project_id, **kwargs):
+        """Update project fields"""
+        for p in self.data["projects"]:
+            if p["id"] == project_id:
+                for key, value in kwargs.items():
+                    p[key] = value
+                self._save()
+                return p
+        return None
+    
+    def delete_project(self, project_id):
+        """Delete a project and its associated links"""
+        self.data["projects"] = [p for p in self.data["projects"] if p["id"] != project_id]
+        self.data["links"] = [l for l in self.data["links"] if l["project_id"] != project_id]
+        self.data["files"] = [f for f in self.data["files"] if f["project_id"] != project_id]
+        self._save()
 
     def get_projects(self):
         return self.data["projects"]

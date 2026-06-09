@@ -1,0 +1,127 @@
+Adept Portal - IT Access Requirements
+1. Background & Purpose
+The Adept Portal is an internally developed web application that bridges Synergis Adept (our document management system) and external collaborators such as contractors, clients, and field staff. It is designed to replicate the core file delivery functionality of Synergis Catalyst - specifically the ability to share a project work area with outside parties so they can upload documents directly into Adept without needing an Adept license.
+
+The portal works as follows:
+� An admin logs in using their Adept domain credentials.
+� The admin creates a "project" that maps to a specific Adept Work Area path on the server.
+� The admin generates a share link (a UUID-based URL) for that project.
+� That link is sent to external users (e.g. via PowerApps, email, or Teams).
+� External users upload documents to a designated SharePoint document library, which the portal automatically syncs into the corresponding Adept Work Area.
+� The portal syncs documents bidirectionally with a designated SharePoint document library, which is the primary mechanism for external file delivery.
+
+Current Status:  The portal is built and the SharePoint sync architecture is in place. The current blocker is lack of access to Microsoft Entra ID and SharePoint
+
+2. What the Portal Needs from Microsoft 365
+The portal integrates with Microsoft 365 in two distinct ways. Both require IT action in Entra ID.
+
+2a. SharePoint Document Sync (Bidirectional)
+The portal includes a background sync engine that runs continuously. Every 60 seconds it checks a designated SharePoint document library folder for new files and automatically downloads them into the corresponding Adept Work Area. This allows workflows where, for example, a project team uploads documents to SharePoint and they appear in Adept automatically, without manual intervention.
+
+To do this, the application must be able to:
+� Authenticate to Microsoft Graph API on behalf of the organization (not an individual user).
+� List SharePoint sites the organization has access to.
+� Browse document libraries and folders within those sites.
+� Download files from a configured SharePoint folder into the local Adept Work Area.
+
+2b. Interactive Admin Authentication 
+For administrators configuring which SharePoint folder to sync with, the portal supports an interactive "Connect Microsoft Account" flow. The admin clicks a button in the dashboard, receives a short code, opens a Microsoft login page, and signs in. The portal then receives a token and can browse SharePoint on behalf of that user - allowing the admin to visually pick the correct SharePoint site, library, and folder to link to each project.
+
+This flow is built using Microsoft's standard OAuth 2.0 Device Authorization Grant, which is designed specifically for applications running on servers or devices without a browser. It uses a publicly registered client app ID to initiate the flow.
+
+Current Problem:  The portal currently uses the Azure CLI's public client ID as a fallback. This only works if that application has already been granted tenant-wide admin consent in our organization's Entra ID - which it has not. Without consent, the authentication request is blocked. We need either our own app registration, or explicit consent granted for this flow.
+
+3. Specific Requests to IT
+
+3a. Create an App Registration in Microsoft Entra ID
+This is the primary requirement. An App Registration (also called a Service Principal) is how a non-Microsoft application is permitted to interact with Microsoft 365 services. It is a standard process performed in the Azure Portal / Entra Admin Center by a Global Administrator or Application Administrator.
+
+The app registration should be configured as follows:
+
+Setting
+Value
+Display Name
+Adept Portal
+Supported Account Types
+Accounts in this organizational directory only (Single tenant)
+Redirect URI
+Not required - this is a server-side / device-code flow application
+Client Secret
+Generate one secret with a reasonable expiry (1-2 years). Provide us the value at creation - it cannot be retrieved afterward.
+API Permissions - Microsoft Graph
+Sites.ReadWrite.All (Application permission)
+API Permissions - Microsoft Graph
+Files.ReadWrite.All (Application permission)
+Admin Consent
+Grant tenant-wide admin consent for both permissions above. Without this step, the application cannot authenticate.
+
+What to provide to us after setup:  Tenant ID (Directory ID), Application (Client) ID, and the Client Secret value. These three values are entered into the portal's System Settings page.
+
+3b. Enable the Device Code Flow (for Interactive Admin Login)
+In addition to the app-only client credentials flow above, the portal also supports an interactive login option where an admin signs in with their own Microsoft account to browse SharePoint. This uses the OAuth 2.0 Device Code flow and requires a separate configuration on the same app registration:
+
+Setting
+Value
+Allow Public Client Flows
+Enable "Allow public client flows" on the app registration (under Authentication tab). This permits the device code grant.
+API Permissions - Delegated
+Sites.ReadWrite.All (Delegated permission, in addition to the Application permission above)
+API Permissions - Delegated
+Files.ReadWrite.All (Delegated permission)
+Admin Consent
+Grant consent for delegated permissions as well. Users may also be prompted individually if per-user consent is permitted.
+
+Note: Delegated permissions apply when the app acts on behalf of a signed-in user. Application permissions apply when the app acts as itself (background sync). Both are needed here because the portal uses both flows.
+
+3c. Provide or Create a SharePoint Document Library for Sync
+The portal syncs files into a specific SharePoint folder configured per project. We need IT to either create or point us to an appropriate SharePoint location. This can be in an existing SharePoint site if one already exists for document management, or a new one can be created.
+
+Item
+Details
+SharePoint Site
+A SharePoint site where project document libraries will live. Can be an existing site (e.g., the company intranet or a Projects site) or a new dedicated site.
+Document Library
+One document library per Adept project, or a single library with subfolders per project - either structure works. The portal admin browses and selects the target folder through the UI.
+Permissions for App
+The app registration (from 3a above) must have Contributor or Write access to the document library. This is granted automatically if Sites.ReadWrite.All was consented tenant-wide, but may need to be scoped if IT prefers Sites.Selected.
+Sites.Selected (Optional Hardening)
+If IT does not want to grant Sites.ReadWrite.All tenant-wide, they can use the Sites.Selected permission model instead, granting the app access to only specific sites. This is more secure but requires an additional step: running a Graph API call or PowerShell to grant the app access to the specific site.
+
+4. What the Portal Does NOT Require
+To clarify scope and avoid unnecessary friction, the following access is not needed:
+
+� No Adept license changes - the portal authenticates users against Adept using the existing COM API on the local machine. No new licenses are required.
+� No changes to Adept server configuration - the portal reads and writes directly to existing Work Area paths via the Windows filesystem.
+� No changes to SharePoint structure unless a new library is desired - we can work with any existing document library.
+� No new user account provisioning for Adept - external users upload via SharePoint using their existing Microsoft 365 credentials. No Adept licenses are consumed.
+
+5. Summary of Requests
+
+#
+Request
+1
+Create Entra ID App Registration with Client Secret
+2
+Grant Application permissions: Sites.ReadWrite.All + Files.ReadWrite.All, and grant tenant-wide admin consent
+3
+Enable public client flows and add Delegated permissions for interactive admin login
+4
+Provide Tenant ID, Client ID, and Client Secret to application owner
+5
+Confirm or create a SharePoint document library for project sync, and grant app access
+
+6. Additional Technical Notes for IT
+
+Regarding Permission Scope
+The Sites.ReadWrite.All application permission grants the registered app read/write access to all SharePoint sites in the tenant. If IT is uncomfortable with this broad scope, the alternative is to use the Sites.Selected permission, which restricts the app to only specific, explicitly designated sites. If IT prefers this approach, they will need to run a Microsoft Graph API call or PowerShell command after app registration to grant access to the specific site(s) - this is standard Microsoft documentation and we can provide the exact commands.
+
+Regarding the Client Secret
+The client secret is a credential equivalent to a password for the application. It should be treated as sensitive. It will be stored in the portal's local data.json configuration file on the server - the same machine that runs Adept. We recommend setting an expiry of 12-24 months and scheduling a renewal reminder. The portal UI has a field to update it when it expires without any code changes.
+
+Regarding the Device Code Flow
+The interactive admin login uses Microsoft's OAuth 2.0 Device Authorization Grant (RFC 8628). This is the same mechanism used by tools like the Azure CLI and VS Code to authenticate without a redirect URI. It is a well-established, secure flow. The admin is shown a short code, opens https://microsoft.com/devicelogin in any browser, enters the code, and signs in with their normal Microsoft 365 credentials. The portal never sees the user's password - only the resulting access token.
+
+What Happens If We Only Get Option A (Client Credentials) but Not Option B (Device Code)
+If IT can only provide the app registration with client credentials (Tenant ID + Client ID + Client Secret) but cannot enable the interactive device code flow, the portal will still work fully for SharePoint sync. The only thing lost is the visual SharePoint folder browser in the admin dashboard - instead, the admin would need to manually look up and enter the SharePoint Site ID, Drive ID, and Folder ID (which can be obtained from the SharePoint URL or via a one-time Graph Explorer query).
+
+Questions or clarifications: please reach out to V. Giordano before making any configuration decisions. All settings are entered through the portal's admin UI - no code changes required once access is granted.

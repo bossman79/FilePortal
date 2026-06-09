@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<doc>
+    <assembly>
+        <name>Interop.AdeptGui</name>
+    </assembly>
+    <members>
+        <member name="T:Interop.AdeptGui.IGuiApi" />
+        <member name="T:Interop.AdeptGui.GuiApiClass" />
+        <member name="T:Interop.AdeptGui.GuiApi" />
+    </members>
+</doc>
