@@ -1,3 +1,5 @@
+
+/app/adept_wrapper.py (full file — 260 lines)
 import clr
 import sys
 import os
@@ -106,25 +108,103 @@ class AdeptWrapper:
         print(f"[GET_WORK_AREAS] Returning {len(work_areas)} work areas")
         return work_areas
     
-    def get_libraries(self):
-        """Get list of all libraries from Adept
-        
-        Note: The Adept API's LibraryList cache is only populated when libraries 
-        are browsed in the Adept GUI client. Since we can't directly query the 
-        VLT table via the API, users must enter library IDs manually in the portal.
-        
-        To find library IDs: Open Adept client > File Guide > right-click library > Properties
+    def get_vaults(self):
+        """Get list of all vaults visible to the current Adept login.
+
+        NxVault only exposes Id + VaultType, so the human-readable name has to
+        be pulled from the VLT table record (see AltGui/Form1.cs::FindVault).
+        """
+        if not self.project:
+            print("[GET_VAULTS] No project")
+            return []
+
+        vaults = []
+        try:
+            vault_list = self.project.VLGUManager.VaultList
+            count = vault_list.GetCount()
+            print(f"[GET_VAULTS] VaultList.GetCount() = {count}")
+
+            rec = self.project.NewRecord()
+            rec.Create("VLT")
+            for i in range(count):
+                v = vault_list.GetItem(i)
+                if v is None:
+                    continue
+                name = ""
+                try:
+                    rec.Clear()
+                    rec.SetStringVal("S_VAULTID", v.Id)
+                    if rec.Fetch(0) == 0:
+                        name = rec.GetStringVal("S_NAME")
+                except Exception as e:
+                    print(f"[GET_VAULTS] Could not fetch VLT name for {v.Id}: {e}")
+                vaults.append({
+                    "id": v.Id,
+                    "name": name,
+                    "vault_type": int(v.VaultType) if v.VaultType is not None else None,
+                })
+        except Exception as e:
+            print(f"[GET_VAULTS] Error: {type(e).__name__}: {e}")
+            import traceback
+            traceback.print_exc()
+        return vaults
+
+    def get_libraries(self, vault_id=None):
+        """Get list of libraries from Adept, optionally filtered to one vault.
+
+        Per the Adept SDK (Synergis.AdeptAPI.chm -> NxLibraryList):
+          * LibraryList.GetCount() reads ONLY the client-side cache, which is
+            empty after a fresh login. That is why the previous implementation
+            saw zero items.
+          * LibraryList.SrvGetCount() asks the server for the list, populates
+            the cache, and returns the total. After that, GetItem(i) returns
+            fully-hydrated NxLibrary objects (Id, VaultId, Name, Path, ...).
+
+        Filtering by vault is just `lib.VaultId == vault_id`; the SDK does not
+        expose a per-vault enumerator. For targeted lookups instead of a full
+        listing, use SrvFindName / SrvFindPath / SrvTypomaticXml.
         """
         if not self.project:
             print("[GET_LIBRARIES] No project")
             return []
-        
-        print("[GET_LIBRARIES] Note: Library enumeration requires GUI interaction.")
-        print("[GET_LIBRARIES] Returning empty - users must enter library IDs manually.")
-        print("[GET_LIBRARIES] Library IDs can be found in Adept client > File Guide > Library Properties")
-        
-        # Return empty list - users will enter library IDs manually
-        return []
+
+        libraries = []
+        try:
+            lib_list = self.project.VLGUManager.LibraryList
+
+            # Force the server fetch first - this is the line that was missing.
+            srv_count = lib_list.SrvGetCount()
+            cached_count = lib_list.GetCount()
+            print(f"[GET_LIBRARIES] SrvGetCount={srv_count}, GetCount={cached_count}")
+
+            for i in range(cached_count):
+                lib = lib_list.GetItem(i)
+                if lib is None:
+                    continue
+                if vault_id and lib.VaultId != vault_id:
+                    continue
+                libraries.append({
+                    "id": lib.Id,
+                    "vault_id": lib.VaultId,
+                    "name": lib.Name,
+                    "path": lib.Path,
+                    "folder": lib.Folder,
+                    "comment1": lib.Comment1,
+                    "comment2": lib.Comment2,
+                    "comment3": lib.Comment3,
+                    "launchable": bool(lib.bLaunchable),
+                    "virtual": bool(lib.bVirtual),
+                    "history_depth": int(lib.HistoryDepth) if lib.HistoryDepth is not None else None,
+                    "revision_depth": int(lib.RevisionDepth) if lib.RevisionDepth is not None else None,
+                })
+        except Exception as e:
+            print(f"[GET_LIBRARIES] Error: {type(e).__name__}: {e}")
+            import traceback
+            traceback.print_exc()
+
+        print(f"[GET_LIBRARIES] Returning {len(libraries)} libraries"
+              + (f" for vault {vault_id}" if vault_id else ""))
+        return libraries
     
     def get_work_area_files(self, work_area_id):
         """Get files in a specific work area"""
