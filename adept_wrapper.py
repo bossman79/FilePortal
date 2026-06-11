@@ -1,5 +1,3 @@
-Here is the file again with zero markdown, copy from the first import clr to the last blank line. Nothing above import clr belongs in the file.
-
 import clr
 import sys
 import os
