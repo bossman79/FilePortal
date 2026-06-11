@@ -1,5 +1,5 @@
+Here is the file again with zero markdown, copy from the first import clr to the last blank line. Nothing above import clr belongs in the file.
 
-/app/adept_wrapper.py (full file — 260 lines)
 import clr
 import sys
 import os
@@ -10,7 +10,7 @@ def setup_adept():
     if ADEPT_DIR not in sys.path:
         sys.path.append(ADEPT_DIR)
     clr.AddReference(os.path.join(ADEPT_DIR, 'Interop.AdeptCAC'))
-    
+
 def create_com_object(dotnet_class):
     from System import Activator
     return Activator.CreateInstance(clr.GetClrType(dotnet_class))
@@ -25,7 +25,7 @@ class AdeptWrapper:
             raise Exception(f"Failed to initialize Adept Core. Error code: {result}")
         self.project = None
         self.login = None
-            
+
     def get_domains(self):
         domains = []
         dl = self.core.DomainList
@@ -36,7 +36,7 @@ class AdeptWrapper:
                 "last_login": d.LastLoginName
             })
         return domains
-        
+
     def authenticate(self, domain_name, username, password):
         """Authenticates an Adept user. Returns True if successful, False otherwise."""
         try:
@@ -45,37 +45,34 @@ class AdeptWrapper:
             if not domain:
                 print(f"[ADEPT_AUTH] Domain '{domain_name}' not found")
                 return False
-            
+
             print(f"[ADEPT_AUTH] Found domain: {domain_name}")
             print(f"[ADEPT_AUTH] Calling AltLogin for user: {username}")
-            
-            # Adept login (AltLogin)
+
             login = domain.AltLogin(username, password, 1, 'en-US')
-            
+
             print(f"[ADEPT_AUTH] AltLogin returned: {login}")
-            
+
             if login is not None:
                 self.login = login
                 self.project = login.Project
                 print(f"[ADEPT_AUTH] Login object set, Project: {self.project}")
                 return True
             else:
-                print(f"[ADEPT_AUTH] AltLogin returned None")
+                print("[ADEPT_AUTH] AltLogin returned None")
                 return False
         except Exception as e:
             print(f"[ADEPT_AUTH] Exception during authentication: {type(e).__name__}: {e}")
             import traceback
             traceback.print_exc()
             return False
-            pass
-        return False
-    
+
     def get_work_areas(self):
         """Get list of all work areas from Adept"""
         if not self.project:
             print("[GET_WORK_AREAS] No project")
             return []
-        
+
         work_areas = []
         try:
             print("[GET_WORK_AREAS] Calling OpenWorkAreaListTable...")
@@ -83,11 +80,11 @@ class AdeptWrapper:
             if not wa_table:
                 print("[GET_WORK_AREAS] OpenWorkAreaListTable returned None")
                 return []
-            
-            print(f"[GET_WORK_AREAS] Table opened, calling GetCount (NOT SrvGetCount)...")
+
+            print("[GET_WORK_AREAS] Table opened, calling GetCount (NOT SrvGetCount)...")
             count = wa_table.GetCount()
             print(f"[GET_WORK_AREAS] Count: {count}")
-            
+
             for i in range(1, count + 1):
                 es = wa_table.GotoRecord(i)
                 if es == 0:
@@ -104,10 +101,10 @@ class AdeptWrapper:
             print(f"[GET_WORK_AREAS] Error: {type(e).__name__}: {e}")
             import traceback
             traceback.print_exc()
-        
+
         print(f"[GET_WORK_AREAS] Returning {len(work_areas)} work areas")
         return work_areas
-    
+
     def get_vaults(self):
         """Get list of all vaults visible to the current Adept login.
 
@@ -160,7 +157,7 @@ class AdeptWrapper:
             the cache, and returns the total. After that, GetItem(i) returns
             fully-hydrated NxLibrary objects (Id, VaultId, Name, Path, ...).
 
-        Filtering by vault is just `lib.VaultId == vault_id`; the SDK does not
+        Filtering by vault is just lib.VaultId == vault_id; the SDK does not
         expose a per-vault enumerator. For targeted lookups instead of a full
         listing, use SrvFindName / SrvFindPath / SrvTypomaticXml.
         """
@@ -202,24 +199,24 @@ class AdeptWrapper:
             import traceback
             traceback.print_exc()
 
-        print(f"[GET_LIBRARIES] Returning {len(libraries)} libraries"
-              + (f" for vault {vault_id}" if vault_id else ""))
+        suffix = f" for vault {vault_id}" if vault_id else ""
+        print(f"[GET_LIBRARIES] Returning {len(libraries)} libraries{suffix}")
         return libraries
-    
+
     def get_work_area_files(self, work_area_id):
         """Get files in a specific work area"""
         if not self.project:
             return []
-        
+
         files = []
         try:
             wa_table = self.project.OpenWorkAreaTable(work_area_id, f"acacwa{work_area_id}")
             if not wa_table:
                 return []
-            
+
             count = wa_table.SrvGetCount()
             if count > 0:
-                wa_table.SrvScroll(1, min(count, 100))  # Limit to 100 files
+                wa_table.SrvScroll(1, min(count, 100))
                 for i in range(1, wa_table.GetCount() + 1):
                     wa_table.GotoRecord(i)
                     files.append({
@@ -230,28 +227,25 @@ class AdeptWrapper:
                     })
         except Exception as e:
             print(f"Error getting work area files: {e}")
-        
+
         return files
-    
+
     def check_in_file(self, file_path, library_id, filename=None):
         """Check in a file from work area to Adept library"""
         if not self.project:
             return {"success": False, "error": "Not connected to Adept"}
-        
+
         try:
-            # Create a new document record
             rec = self.project.NewRecord()
-            rec.Create("fm100fil")  # File table
-            
+            rec.Create("fm100fil")
+
             if not filename:
                 filename = os.path.basename(file_path)
-            
-            # Set file properties
+
             rec.SetStringVal("S_LONGNAME", filename)
             rec.SetStringVal("S_LIBNAME", library_id)
             rec.SetStringVal("S_PATH", file_path)
-            
-            # Append the record
+
             result = rec.Append()
             if result == 0:
                 return {"success": True, "filename": filename, "library": library_id}
