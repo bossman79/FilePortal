@@ -304,6 +304,48 @@
             grid-template-columns: 1fr 1fr;
             gap: 1rem;
         }
+
+        .lib-tree {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            max-height: 260px;
+            overflow-y: auto;
+            padding: 0.5rem;
+            font-size: 0.875rem;
+            background: white;
+        }
+
+        .lib-node .lib-children { margin-left: 1.25rem; }
+
+        .lib-row {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.2rem 0.3rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .lib-row:hover { background: var(--surface-hover); }
+        .lib-row.selected { background: #dbeafe; font-weight: 600; }
+        .lib-row.included { background: #f0fdf4; color: #065f46; }
+
+        .lib-toggle {
+            width: 1rem;
+            display: inline-block;
+            text-align: center;
+            color: var(--text-muted);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .lib-vault {
+            font-weight: 600;
+            color: var(--primary);
+            padding: 0.3rem 0.2rem;
+        }
+
+        .lib-node.collapsed > .lib-children { display: none; }
     </style>
 </head>
 <body>
@@ -503,13 +545,17 @@
                 <h3 style="margin-top: 1.5rem; margin-bottom: 1rem; font-size: 1rem;">Adept Integration</h3>
 
                 <div class="form-group">
-                    <label>Adept Work Area ID</label>
-                    <input type="text" id="adept_work_area_id" placeholder="Optional: Link to Adept work area">
+                    <label>Adept Work Area</label>
+                    <select id="adept_work_area_id">
+                        <option value="">— None —</option>
+                    </select>
                 </div>
 
                 <div class="form-group">
-                    <label>Adept Library ID*</label>
-                    <input type="text" id="adept_library_id" placeholder="Target library for check-ins">
+                    <label>Adept Library (check-in target)</label>
+                    <input type="hidden" id="adept_library_id">
+                    <div id="libTree" class="lib-tree"><p style="color: var(--text-muted);">Loading libraries...</p></div>
+                    <small id="libSelectionInfo" style="color: var(--text-muted); display: block; margin-top: 0.4rem;">Select a library. Selecting a parent includes all libraries beneath it.</small>
                 </div>
 
                 <div class="form-group">
@@ -592,7 +638,9 @@
             document.getElementById('modalTitle').textContent = 'Create New Project';
             document.getElementById('projectForm').reset();
             document.getElementById('project_id').value = '';
+            document.getElementById('adept_library_id').value = '';
             document.getElementById('projectModal').classList.add('active');
+            loadAdeptPickers('', '');
         }
 
         function closeProjectModal() {
@@ -611,8 +659,8 @@
                         document.getElementById('name').value = project.name;
                         document.getElementById('path').value = project.work_area_path;
                         document.getElementById('flatten').checked = project.flatten_uploads;
-                        document.getElementById('adept_work_area_id').value = project.adept_work_area_id || '';
                         document.getElementById('adept_library_id').value = project.adept_library_id || '';
+                        loadAdeptPickers(project.adept_work_area_id || '', project.adept_library_id || '');
                         document.getElementById('auto_checkin').checked = project.auto_checkin || false;
                         document.getElementById('name_filter_pattern').value = project.name_filter_pattern || '';
                         document.getElementById('file_type_filter').value = project.file_type_filter || '';
@@ -824,6 +872,92 @@
             } catch(e) {
                 showToast('Network error');
             }
+        }
+
+        // ---- Adept pickers (work area dropdown + hierarchical library tree) ----
+        let adeptPickerCache = null;
+
+        async function loadAdeptPickers(selectedWorkArea, selectedLibrary) {
+            const waSelect = document.getElementById('adept_work_area_id');
+            const treeEl = document.getElementById('libTree');
+            try {
+                if (!adeptPickerCache) {
+                    treeEl.innerHTML = '<p style="color: var(--text-muted);">Loading libraries...</p>';
+                    const [waRes, treeRes] = await Promise.all([
+                        fetch('/admin/api/adept/work_areas'),
+                        fetch('/admin/api/adept/library_tree')
+                    ]);
+                    const waData = await waRes.json();
+                    const treeData = await treeRes.json();
+                    if (!waRes.ok) throw new Error(waData.error || 'Failed to load work areas');
+                    if (!treeRes.ok) throw new Error(treeData.error || 'Failed to load libraries');
+                    adeptPickerCache = {
+                        workAreas: waData.work_areas || [],
+                        vaults: treeData.vaults || []
+                    };
+                }
+
+                waSelect.innerHTML = '<option value="">— None —</option>' +
+                    adeptPickerCache.workAreas.map(wa => {
+                        const label = (wa.comment ? wa.comment + ' — ' : '') + wa.path;
+                        return `<option value="${wa.id}">${label}</option>`;
+                    }).join('');
+                waSelect.value = selectedWorkArea || '';
+
+                renderLibTree(adeptPickerCache.vaults, selectedLibrary || '');
+            } catch (e) {
+                treeEl.innerHTML = '<p>Error loading Adept data: ' + e.message + '</p>';
+            }
+        }
+
+        function libNodeHtml(node) {
+            const hasKids = node.children && node.children.length > 0;
+            const label = node.folder || node.name || node.path || node.id;
+            return `
+                <div class="lib-node" data-id="${node.id}">
+                    <div class="lib-row" onclick="selectLibNode('${node.id}')" title="${node.path || ''}">
+                        <span class="lib-toggle" onclick="event.stopPropagation(); toggleLibNode(this)">${hasKids ? '▾' : ''}</span>
+                        <span>📚 ${label}</span>
+                    </div>
+                    ${hasKids ? `<div class="lib-children">${node.children.map(c => libNodeHtml(c)).join('')}</div>` : ''}
+                </div>`;
+        }
+
+        function renderLibTree(vaults, selectedId) {
+            const treeEl = document.getElementById('libTree');
+            if (!vaults.length) {
+                treeEl.innerHTML = '<p>No libraries found.</p>';
+                return;
+            }
+            treeEl.innerHTML = vaults.map(v => `
+                <div class="lib-vault">🗄 ${v.name || v.id}</div>
+                ${v.libraries.map(n => libNodeHtml(n)).join('')}
+            `).join('');
+            if (selectedId) selectLibNode(selectedId);
+        }
+
+        function toggleLibNode(toggleEl) {
+            const node = toggleEl.closest('.lib-node');
+            if (!node.querySelector(':scope > .lib-children')) return;
+            node.classList.toggle('collapsed');
+            toggleEl.textContent = node.classList.contains('collapsed') ? '▸' : '▾';
+        }
+
+        function selectLibNode(libId) {
+            document.getElementById('adept_library_id').value = libId;
+            document.querySelectorAll('#libTree .lib-row').forEach(r => r.classList.remove('selected', 'included'));
+            const nodeEl = document.querySelector(`#libTree .lib-node[data-id="${libId}"]`);
+            const info = document.getElementById('libSelectionInfo');
+            if (!nodeEl) {
+                if (libId) info.textContent = `Saved library ${libId} is not visible in the current tree.`;
+                return;
+            }
+            nodeEl.querySelector(':scope > .lib-row').classList.add('selected');
+            const descendants = nodeEl.querySelectorAll('.lib-children .lib-row');
+            descendants.forEach(r => r.classList.add('included'));
+            info.textContent = descendants.length > 0
+                ? `Selected parent library — includes ${descendants.length} nested librar${descendants.length === 1 ? 'y' : 'ies'} beneath it.`
+                : 'Selected library (no nested libraries).';
         }
 
         // Load Adept Work Areas

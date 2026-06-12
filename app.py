@@ -467,6 +467,18 @@ def get_adept_vaults():
 
     return jsonify({"vaults": adept.get_vaults()})
 
+@app.route('/admin/api/adept/library_tree', methods=['GET'])
+def get_adept_library_tree():
+    if 'username' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    if not adept:
+        return jsonify({"error": "Adept API not initialized"}), 500
+    if not adept.project:
+        return jsonify({"error": "Not connected to Adept. Please log in again.", "debug": "adept.project is None"}), 400
+
+    return jsonify({"vaults": adept.get_library_tree()})
+
 @app.route('/admin/api/adept/checkin', methods=['POST'])
 def checkin_files():
     if 'username' not in session:

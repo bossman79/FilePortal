@@ -20,7 +20,15 @@
             "name": "Test Project",
             "work_area_path": "\\\\Betws707\\c$\\Users\\vgiordano\\AppData\\Roaming\\Synergis\\Adept\\My Adept WorkArea\\Project A",
             "flatten_uploads": true,
-            "created_at": "2026-06-08T11:28:20.382275"
+            "created_at": "2026-06-08T11:28:20.382275",
+            "adept_work_area_id": "a725117a-eed1-40de-bef4-9ce32c73214c",
+            "adept_library_id": "84aa5ede-382b-46fd-8bd3-9b99a7f6df78",
+            "auto_checkin": false,
+            "name_filter_pattern": "",
+            "file_type_filter": "",
+            "sp_site_id": "",
+            "sp_drive_id": "",
+            "sp_folder_id": ""
         }
     ],
     "links": [
